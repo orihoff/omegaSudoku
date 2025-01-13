@@ -17,9 +17,9 @@ namespace omegaSudoku
             board.Clear();
             int index = 0;
 
-            for (int r = 0; r < 9; r++) 
+            for (int r = 0; r < SudokuConstants.BoardSize; r++)
             {
-                for (int c = 0; c < 9; c++)
+                for (int c = 0; c < SudokuConstants.BoardSize; c++)
                 {
                     int val = input[index++] - '0';
                     board[(r, c)] = val == 0 ? new List<int>() : new List<int> { val };
@@ -29,9 +29,9 @@ namespace omegaSudoku
 
         public void Print()
         {
-            for (int r = 0; r < 9; r++) 
+            for (int r = 0; r < SudokuConstants.BoardSize; r++)
             {
-                for (int c = 0; c < 9; c++)
+                for (int c = 0; c < SudokuConstants.BoardSize; c++)
                 {
                     var opts = board[(r, c)];
                     Console.Write(opts.Count == 1 ? $"{opts[0]} " : ". ");

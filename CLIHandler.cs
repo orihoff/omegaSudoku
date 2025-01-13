@@ -20,9 +20,9 @@ namespace omegaSudoku
                 if (input?.ToLower() == "exit")
                     break;
 
-                if (input.Length != 81 || !int.TryParse(input, out _))
+                if (input.Length != SudokuConstants.BoardSize * SudokuConstants.BoardSize || !int.TryParse(input, out _))
                 {
-                    Console.WriteLine("Invalid input. Please enter a valid 81-character Sudoku puzzle.");
+                    Console.WriteLine($"Invalid input. Please enter a valid {SudokuConstants.BoardSize * SudokuConstants.BoardSize}-character Sudoku puzzle.");
                     continue;
                 }
 
