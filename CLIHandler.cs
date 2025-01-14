@@ -29,6 +29,20 @@ namespace omegaSudoku
                 board.Initialize(input);
                 Console.WriteLine("Initial board:");
                 board.Print();
+
+                SudokuSolver solver = new SudokuSolver(board);
+                bool solved = solver.Solve();
+
+                if (solved)
+                {
+                    Console.WriteLine("Solved board:");
+                    board.Print();
+                }
+                else
+                {
+                    Console.WriteLine("The puzzle could not be solved.");
+                }
+
                 Console.WriteLine("---------");
             }
         }
