@@ -19,41 +19,42 @@ namespace omegaSudoku
 
         private bool Backtrack(int row, int col)
         {
-            // אם הגענו לסוף הלוח
+            //Sudoku is solved
             if (row == SudokuConstants.BoardSize)
                 return true;
 
-            // תא הבא
+            // Move to the next cell
             int nextRow = col == SudokuConstants.BoardSize - 1 ? row + 1 : row;
             int nextCol = (col + 1) % SudokuConstants.BoardSize;
 
-            // אם התא מלא, נמשיך לתא הבא
+            // If the cell already has a value, skip to next cell
             if (board.GetOptions(row, col).Count == 1)
                 return Backtrack(nextRow, nextCol);
 
-            // בדיקה עבור כל ערך אפשרי
+            // Try every possible number for this cell
             for (int num = SudokuConstants.MinValue; num <= SudokuConstants.MaxValue; num++)
             {
                 if (IsValid(row, col, num))
                 {
-                    // עדכון התא
+                    // Set the current number in the cell
                     board.GetOptions(row, col).Clear();
                     board.GetOptions(row, col).Add(num);
 
-                    // פתרון רקורסיבי
+                    // Recursive call to solve the rest of the board
                     if (Backtrack(nextRow, nextCol))
                         return true;
 
-                    // אם נכשל, ננקה את התא
+                    // If it didn't work, reset the cell (backtracking)
                     board.GetOptions(row, col).Clear();
                 }
             }
 
-            return false;
+            return false; // If no solution was found, backtrack
         }
 
         private bool IsValid(int row, int col, int num)
         {
+            // Check if the number is valid in the row column and 3x3 box
             return !GetUsedInRow(row).Contains(num) &&
                    !GetUsedInCol(col).Contains(num) &&
                    !GetUsedInBox(row, col).Contains(num);
@@ -66,7 +67,7 @@ namespace omegaSudoku
             {
                 var options = board.GetOptions(row, col);
                 if (options.Count == 1)
-                    used.Add(options[0]);
+                    used.Add(options[0]); // Add value if the cell is already filled
             }
             return used;
         }
@@ -78,7 +79,7 @@ namespace omegaSudoku
             {
                 var options = board.GetOptions(row, col);
                 if (options.Count == 1)
-                    used.Add(options[0]);
+                    used.Add(options[0]); // Add  value if the cell is already filled
             }
             return used;
         }
@@ -86,8 +87,8 @@ namespace omegaSudoku
         private HashSet<int> GetUsedInBox(int row, int col)
         {
             var used = new HashSet<int>();
-            int boxRowStart = (row / 3) * 3;
-            int boxColStart = (col / 3) * 3;
+            int boxRowStart = (row / 3) * 3; // Find the starting row of the 3x3 box
+            int boxColStart = (col / 3) * 3; // Find the starting column ...
 
             for (int r = 0; r < 3; r++)
             {
@@ -95,7 +96,7 @@ namespace omegaSudoku
                 {
                     var options = board.GetOptions(boxRowStart + r, boxColStart + c);
                     if (options.Count == 1)
-                        used.Add(options[0]);
+                        used.Add(options[0]); // Add the value if the cell is already filled
                 }
             }
             return used;
