@@ -30,19 +30,16 @@ namespace omegaSudoku
                 Console.WriteLine("Initial board:");
                 board.Print();
 
-                SudokuSolver solver = new SudokuSolver(board);
-                bool solved = solver.Solve();
-
-                if (solved)
+                var solver = new SudokuSolver(board);
+                if (solver.Solve())
                 {
                     Console.WriteLine("Solved board:");
                     board.Print();
                 }
                 else
                 {
-                    Console.WriteLine("The puzzle could not be solved.");
+                    Console.WriteLine("Could not solve the Sudoku puzzle.");
                 }
-
                 Console.WriteLine("---------");
             }
         }
