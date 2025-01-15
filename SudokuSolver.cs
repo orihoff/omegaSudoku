@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Diagnostics;
 
 namespace omegaSudoku
 {
@@ -15,9 +15,12 @@ namespace omegaSudoku
 
         public bool Solve()
         {
-            
+            var stopwatch = Stopwatch.StartNew(); // Start timing
 
             bool solved = Backtrack(0, 0);
+
+            stopwatch.Stop(); // Stop timing
+            Console.WriteLine($"Time taken to solve: {stopwatch.ElapsedMilliseconds} ms");
 
             return solved;
         }
