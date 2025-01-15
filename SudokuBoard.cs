@@ -77,12 +77,12 @@ namespace omegaSudoku
         public HashSet<int> GetUsedInBox(int row, int col)
         {
             var used = new HashSet<int>();
-            int boxRowStart = (row / 3) * 3;
-            int boxColStart = (col / 3) * 3;
+            int boxRowStart = (row / SudokuConstants.SubgridHeight) * SudokuConstants.SubgridHeight;
+            int boxColStart = (col / SudokuConstants.SubgridWidth) * SudokuConstants.SubgridWidth;
 
-            for (int r = 0; r < 3; r++)
+            for (int r = 0; r < SudokuConstants.SubgridHeight; r++)
             {
-                for (int c = 0; c < 3; c++)
+                for (int c = 0; c < SudokuConstants.SubgridWidth; c++)
                 {
                     var options = board[(boxRowStart + r, boxColStart + c)];
                     if (options.Count == 1)
