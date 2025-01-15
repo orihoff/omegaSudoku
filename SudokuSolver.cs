@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
+
 namespace omegaSudoku
 {
     public class SudokuSolver
     {
-        private readonly SudokuBoard board;
+        private SudokuBoard board;
 
         public SudokuSolver(SudokuBoard board)
         {
@@ -14,89 +15,107 @@ namespace omegaSudoku
 
         public bool Solve()
         {
-            return Backtrack(0, 0);
+            
+
+            bool solved = Backtrack(0, 0);
+
+            return solved;
         }
 
         private bool Backtrack(int row, int col)
         {
-            // Sudoku is solved
+            // If we've reached the end of the board, we're done
             if (row == SudokuConstants.BoardSize)
                 return true;
 
-            // Move to the next cell
+            // Determine the next cell
             int nextRow = col == SudokuConstants.BoardSize - 1 ? row + 1 : row;
             int nextCol = (col + 1) % SudokuConstants.BoardSize;
 
-            // If the cell already has a value, skip to the next cell
+            // If the cell is already filled, move to the next one
             if (board.GetOptions(row, col).Count == 1)
                 return Backtrack(nextRow, nextCol);
 
-            // Try every possible number for this cell
-            for (int num = SudokuConstants.MinValue; num <= SudokuConstants.MaxValue; num++)
+            // Try every possible value for the current cell
+            for (int num = SudokuConstants.MinValue;
+                 num < SudokuConstants.MinValue + SudokuConstants.BoardSize * SudokuConstants.Step;
+                 num += SudokuConstants.Step)
             {
                 if (IsValid(row, col, num))
                 {
-                    // Set the current number in the cell
+                    // Update the cell with the chosen value
                     board.GetOptions(row, col).Clear();
                     board.GetOptions(row, col).Add(num);
 
-                    // Recursive call to solve the rest of the board
+                    // Recursively solve the rest of the board
                     if (Backtrack(nextRow, nextCol))
                         return true;
 
-                    // If it didn't work, reset the cell (backtracking)
+                    // If it fails, reset the cell
                     board.GetOptions(row, col).Clear();
+                    ResetOptions(row, col);
                 }
             }
 
-            return false; // If no solution was found, backtrack
+            // If no number fits, backtrack
+            return false;
+        }
+
+        private void ResetOptions(int row, int col)
+        {
+            for (int i = SudokuConstants.MinValue;
+                 i < SudokuConstants.MinValue + SudokuConstants.BoardSize * SudokuConstants.Step;
+                 i += SudokuConstants.Step)
+            {
+                board.GetOptions(row, col).Add(i);
+            }
         }
 
         private bool IsValid(int row, int col, int num)
         {
-            // Check if the number is valid in the row, column, and subgrid
-            return !GetUsedInRow(row).Contains(num) &&
-                   !GetUsedInCol(col).Contains(num) &&
-                   !GetUsedInBox(row, col).Contains(num);
+            // Check if the number is already used in the row, column, or box
+            return !getUsedInRow(row).Contains(num) &&
+                   !getUsedInCol(col).Contains(num) &&
+                   !getUsedInBox(row, col).Contains(num);
         }
 
-        private HashSet<int> GetUsedInRow(int row)
+        private IEnumerable<int> getUsedInRow(int row)
         {
             var used = new HashSet<int>();
             for (int col = 0; col < SudokuConstants.BoardSize; col++)
             {
                 var options = board.GetOptions(row, col);
                 if (options.Count == 1)
-                    used.Add(options[0]); // Add value if the cell is already filled
+                    used.Add(options[0]);
             }
             return used;
         }
 
-        private HashSet<int> GetUsedInCol(int col)
+        private IEnumerable<int> getUsedInCol(int col)
         {
             var used = new HashSet<int>();
             for (int row = 0; row < SudokuConstants.BoardSize; row++)
             {
                 var options = board.GetOptions(row, col);
                 if (options.Count == 1)
-                    used.Add(options[0]); // Add value if the cell is already filled
+                    used.Add(options[0]);
             }
             return used;
         }
 
-        private HashSet<int> GetUsedInBox(int row, int col)
+        private IEnumerable<int> getUsedInBox(int row, int col)
         {
             var used = new HashSet<int>();
-            int boxRowStart = (row / SudokuConstants.SubgridHeight) * SudokuConstants.SubgridHeight;
-            int boxColStart = (col / SudokuConstants.SubgridWidth) * SudokuConstants.SubgridWidth;
+            int boxRow = (row / SudokuConstants.SubgridRows) * SudokuConstants.SubgridRows;
+            int boxCol = (col / SudokuConstants.SubgridCols) * SudokuConstants.SubgridCols;
 
-            for (int r = 0; r < SudokuConstants.SubgridHeight; r++)
+            for (int r = 0; r < SudokuConstants.SubgridRows; r++)
             {
-                for (int c = 0; c < SudokuConstants.SubgridWidth; c++)
+                for (int c = 0; c < SudokuConstants.SubgridCols; c++)
                 {
-                    var options = board.GetOptions(boxRowStart + r, boxColStart + c);
+                    var options = board.GetOptions(boxRow + r, boxCol + c);
                     if (options.Count == 1)
-                        used.Add(options[0]); // Add the value if the cell is already filled
+                        used.Add(options[0]);
                 }
             }
             return used;
