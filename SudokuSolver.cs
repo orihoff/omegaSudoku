@@ -19,7 +19,7 @@ namespace omegaSudoku
 
         private bool Backtrack(int row, int col)
         {
-            //Sudoku is solved
+            // Sudoku is solved
             if (row == SudokuConstants.BoardSize)
                 return true;
 
@@ -27,7 +27,7 @@ namespace omegaSudoku
             int nextRow = col == SudokuConstants.BoardSize - 1 ? row + 1 : row;
             int nextCol = (col + 1) % SudokuConstants.BoardSize;
 
-            // If the cell already has a value, skip to next cell
+            // If the cell already has a value, skip to the next cell
             if (board.GetOptions(row, col).Count == 1)
                 return Backtrack(nextRow, nextCol);
 
@@ -54,7 +54,7 @@ namespace omegaSudoku
 
         private bool IsValid(int row, int col, int num)
         {
-            // Check if the number is valid in the row column and 3x3 box
+            // Check if the number is valid in the row, column, and subgrid
             return !GetUsedInRow(row).Contains(num) &&
                    !GetUsedInCol(col).Contains(num) &&
                    !GetUsedInBox(row, col).Contains(num);
@@ -79,7 +79,7 @@ namespace omegaSudoku
             {
                 var options = board.GetOptions(row, col);
                 if (options.Count == 1)
-                    used.Add(options[0]); // Add  value if the cell is already filled
+                    used.Add(options[0]); // Add value if the cell is already filled
             }
             return used;
         }
@@ -87,12 +87,12 @@ namespace omegaSudoku
         private HashSet<int> GetUsedInBox(int row, int col)
         {
             var used = new HashSet<int>();
-            int boxRowStart = (row / 3) * 3; // Find the starting row of the 3x3 box
-            int boxColStart = (col / 3) * 3; // Find the starting column ...
+            int boxRowStart = (row / SudokuConstants.SubgridHeight) * SudokuConstants.SubgridHeight;
+            int boxColStart = (col / SudokuConstants.SubgridWidth) * SudokuConstants.SubgridWidth;
 
-            for (int r = 0; r < 3; r++)
+            for (int r = 0; r < SudokuConstants.SubgridHeight; r++)
             {
-                for (int c = 0; c < 3; c++)
+                for (int c = 0; c < SudokuConstants.SubgridWidth; c++)
                 {
                     var options = board.GetOptions(boxRowStart + r, boxColStart + c);
                     if (options.Count == 1)
