@@ -14,23 +14,34 @@ namespace omegaSudoku
 
         public void Initialize(string input)
         {
+            int boardSize = SudokuConstants.BoardSize;
+            int minValue = SudokuConstants.MinValue;
+            int step = SudokuConstants.Step;
+
+            string validationMessage = InputValidator.Validate(input);
+            if (!string.IsNullOrEmpty(validationMessage))
+                throw new ArgumentException($"Invalid input: {validationMessage}");
+
             board.Clear();
             int index = 0;
 
-            for (int r = 0; r < SudokuConstants.BoardSize; r++)
+            for (int r = 0; r < boardSize; r++)
             {
-                for (int c = 0; c < SudokuConstants.BoardSize; c++)
+                for (int c = 0; c < boardSize; c++)
                 {
                     int val = input[index++] - '0';
-                    board[(r, c)] = val == 0 ? CreatePossibilitiesList() : new List<int> { val };
+
+                    board[(r, c)] = val == 0
+                        ? CreatePossibilitiesList(minValue, boardSize, step)
+                        : new List<int> { val };
                 }
             }
         }
 
-        private List<int> CreatePossibilitiesList()
+        private List<int> CreatePossibilitiesList(int minValue, int boardSize, int step)
         {
             var possibilities = new List<int>();
-            for (int i = SudokuConstants.MinValue; i <= SudokuConstants.MaxValue; i++)
+            for (int i = minValue; i < minValue + boardSize * step; i += step)
                 possibilities.Add(i);
             return possibilities;
         }
@@ -39,57 +50,17 @@ namespace omegaSudoku
 
         public void Print()
         {
-            for (int r = 0; r < SudokuConstants.BoardSize; r++)
+            int boardSize = SudokuConstants.BoardSize;
+
+            for (int r = 0; r < boardSize; r++)
             {
-                for (int c = 0; c < SudokuConstants.BoardSize; c++)
+                for (int c = 0; c < boardSize; c++)
                 {
                     var opts = board[(r, c)];
                     Console.Write(opts.Count == 1 ? $"{opts[0]} " : ". ");
                 }
                 Console.WriteLine();
             }
-        }
-
-        public HashSet<int> GetUsedInRow(int row)
-        {
-            var used = new HashSet<int>();
-            for (int col = 0; col < SudokuConstants.BoardSize; col++)
-            {
-                var options = board[(row, col)];
-                if (options.Count == 1)
-                    used.Add(options[0]);
-            }
-            return used;
-        }
-
-        public HashSet<int> GetUsedInCol(int col)
-        {
-            var used = new HashSet<int>();
-            for (int row = 0; row < SudokuConstants.BoardSize; row++)
-            {
-                var options = board[(row, col)];
-                if (options.Count == 1)
-                    used.Add(options[0]);
-            }
-            return used;
-        }
-
-        public HashSet<int> GetUsedInBox(int row, int col)
-        {
-            var used = new HashSet<int>();
-            int boxRowStart = (row / SudokuConstants.SubgridHeight) * SudokuConstants.SubgridHeight;
-            int boxColStart = (col / SudokuConstants.SubgridWidth) * SudokuConstants.SubgridWidth;
-
-            for (int r = 0; r < SudokuConstants.SubgridHeight; r++)
-            {
-                for (int c = 0; c < SudokuConstants.SubgridWidth; c++)
-                {
-                    var options = board[(boxRowStart + r, boxColStart + c)];
-                    if (options.Count == 1)
-                        used.Add(options[0]);
-                }
-            }
-            return used;
         }
     }
 }

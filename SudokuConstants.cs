@@ -4,15 +4,12 @@ namespace omegaSudoku
 {
     public static class SudokuConstants
     {
-        public static int BoardSize { get; set; } = 4; // Board size
-        public static int MinValue { get; set; } = 1; // The minimum value in the table
-        public static int MaxValue => MinValue + BoardSize - 1; // The maximum value
+        public static int BoardSize { get; set; } = 9; // Default size
+        public static int SubgridRows { get; private set; } // Rows in subgrid
+        public static int SubgridCols { get; private set; } // Columns in subgrid
+        public const int MinValue = 1; // Minimal value
+        public const int Step = 1;    // Step between values
 
-        // Mini-square dimensions (calculated automatically based on board size)
-        public static int SubgridHeight { get; private set; }
-        public static int SubgridWidth { get; private set; }
-
-        // Static constructor to calculate subgrid dimensions
         static SudokuConstants()
         {
             CalculateSubgridDimensions();
@@ -20,19 +17,21 @@ namespace omegaSudoku
 
         private static void CalculateSubgridDimensions()
         {
-            // Finding factors of BoardSize to determine valid subgrid dimensions
+            bool validDimensionsFound = false;
+
             for (int i = 1; i <= Math.Sqrt(BoardSize); i++)
             {
                 if (BoardSize % i == 0)
                 {
-                    SubgridHeight = i;
-                    SubgridWidth = BoardSize / i;
+                    SubgridRows = i;
+                    SubgridCols = BoardSize / i;
+                    validDimensionsFound = true;
                 }
             }
 
-            if (SubgridHeight * SubgridWidth != BoardSize)
+            if (!validDimensionsFound || SubgridRows * SubgridCols != BoardSize)
             {
-                throw new InvalidOperationException($"Invalid board size: {BoardSize}. Cannot determine valid subgrid dimensions.");
+                throw new InvalidOperationException($"Invalid board size: {BoardSize}x{BoardSize}. Unable to determine valid subgrid dimensions.");
             }
         }
     }

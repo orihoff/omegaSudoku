@@ -20,27 +20,37 @@ namespace omegaSudoku
                 if (input?.ToLower() == "exit")
                     break;
 
-             
-                if (input.Length != SudokuConstants.BoardSize * SudokuConstants.BoardSize || !int.TryParse(input, out _))
+                string validationMessage = InputValidator.Validate(input);
+                if (!string.IsNullOrEmpty(validationMessage))
                 {
-                    Console.WriteLine($"Invalid input. You entered {input.Length} characters. Please enter a valid {SudokuConstants.BoardSize * SudokuConstants.BoardSize}-character Sudoku puzzle.");
+                    Console.WriteLine($"Invalid input: {validationMessage}");
                     continue;
                 }
 
-                board.Initialize(input);
-                Console.WriteLine("Initial board:");
-                board.Print();
-
-                var solver = new SudokuSolver(board);
-                if (solver.Solve())
+                try
                 {
-                    Console.WriteLine("Solved board:");
+                    board.Initialize(input);
+                    Console.WriteLine("Initial board:");
                     board.Print();
+
+                    SudokuSolver solver = new SudokuSolver(board);
+                    bool success = solver.Solve();
+
+                    if (success)
+                    {
+                        Console.WriteLine("Solved board:");
+                        board.Print();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Could not fully solve the Sudoku puzzle.");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    Console.WriteLine("Could not solve the Sudoku puzzle.");
+                    Console.WriteLine($"Error: {ex.Message}");
                 }
+
                 Console.WriteLine("---------");
             }
         }
