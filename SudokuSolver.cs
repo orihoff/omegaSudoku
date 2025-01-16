@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace omegaSudoku
@@ -55,8 +54,7 @@ namespace omegaSudoku
                         return true;
 
                     // If it fails, reset the cell
-                    board.GetOptions(row, col).Clear();
-                    ResetOptions(row, col);
+                    board.ResetOptions(row, col);
                 }
             }
 
@@ -64,64 +62,12 @@ namespace omegaSudoku
             return false;
         }
 
-        private void ResetOptions(int row, int col)
-        {
-            for (int i = SudokuConstants.MinValue;
-                 i < SudokuConstants.MinValue + SudokuConstants.BoardSize * SudokuConstants.Step;
-                 i += SudokuConstants.Step)
-            {
-                board.GetOptions(row, col).Add(i);
-            }
-        }
-
         private bool IsValid(int row, int col, int num)
         {
             // Check if the number is already used in the row, column, or box
-            return !getUsedInRow(row).Contains(num) &&
-                   !getUsedInCol(col).Contains(num) &&
-                   !getUsedInBox(row, col).Contains(num);
-        }
-
-        private IEnumerable<int> getUsedInRow(int row)
-        {
-            var used = new HashSet<int>();
-            for (int col = 0; col < SudokuConstants.BoardSize; col++)
-            {
-                var options = board.GetOptions(row, col);
-                if (options.Count == 1)
-                    used.Add(options[0]);
-            }
-            return used;
-        }
-
-        private IEnumerable<int> getUsedInCol(int col)
-        {
-            var used = new HashSet<int>();
-            for (int row = 0; row < SudokuConstants.BoardSize; row++)
-            {
-                var options = board.GetOptions(row, col);
-                if (options.Count == 1)
-                    used.Add(options[0]);
-            }
-            return used;
-        }
-
-        private IEnumerable<int> getUsedInBox(int row, int col)
-        {
-            var used = new HashSet<int>();
-            int boxRow = (row / SudokuConstants.SubgridRows) * SudokuConstants.SubgridRows;
-            int boxCol = (col / SudokuConstants.SubgridCols) * SudokuConstants.SubgridCols;
-
-            for (int r = 0; r < SudokuConstants.SubgridRows; r++)
-            {
-                for (int c = 0; c < SudokuConstants.SubgridCols; c++)
-                {
-                    var options = board.GetOptions(boxRow + r, boxCol + c);
-                    if (options.Count == 1)
-                        used.Add(options[0]);
-                }
-            }
-            return used;
+            return !board.GetUsedInRow(row).Contains(num) &&
+                   !board.GetUsedInCol(col).Contains(num) &&
+                   !board.GetUsedInBox(row, col).Contains(num);
         }
     }
 }

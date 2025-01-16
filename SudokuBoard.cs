@@ -48,6 +48,61 @@ namespace omegaSudoku
 
         public List<int> GetOptions(int row, int col) => board[(row, col)];
 
+        public void ResetOptions(int row, int col)
+        {
+            int minValue = SudokuConstants.MinValue;
+            int step = SudokuConstants.Step;
+            int boardSize = SudokuConstants.BoardSize;
+
+            board[(row, col)].Clear();
+            for (int i = minValue; i < minValue + boardSize * step; i += step)
+            {
+                board[(row, col)].Add(i);
+            }
+        }
+
+        public IEnumerable<int> GetUsedInRow(int row)
+        {
+            var used = new HashSet<int>();
+            for (int col = 0; col < SudokuConstants.BoardSize; col++)
+            {
+                var options = board[(row, col)];
+                if (options.Count == 1)
+                    used.Add(options[0]);
+            }
+            return used;
+        }
+
+        public IEnumerable<int> GetUsedInCol(int col)
+        {
+            var used = new HashSet<int>();
+            for (int row = 0; row < SudokuConstants.BoardSize; row++)
+            {
+                var options = board[(row, col)];
+                if (options.Count == 1)
+                    used.Add(options[0]);
+            }
+            return used;
+        }
+
+        public IEnumerable<int> GetUsedInBox(int row, int col)
+        {
+            var used = new HashSet<int>();
+            int boxRow = (row / SudokuConstants.SubgridRows) * SudokuConstants.SubgridRows;
+            int boxCol = (col / SudokuConstants.SubgridCols) * SudokuConstants.SubgridCols;
+
+            for (int r = 0; r < SudokuConstants.SubgridRows; r++)
+            {
+                for (int c = 0; c < SudokuConstants.SubgridCols; c++)
+                {
+                    var options = board[(boxRow + r, boxCol + c)];
+                    if (options.Count == 1)
+                        used.Add(options[0]);
+                }
+            }
+            return used;
+        }
+
         public void Print()
         {
             int boardSize = SudokuConstants.BoardSize;
