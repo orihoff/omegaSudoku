@@ -30,8 +30,16 @@ namespace omegaSudoku
                 try
                 {
                     board.Initialize(input);
+
                     Console.WriteLine("Initial board:");
                     board.Print();
+
+                    string boardValidationMessage = SudokuValidator.ValidateInitialBoard(board);
+                    if (!string.IsNullOrEmpty(boardValidationMessage))
+                    {
+                        Console.WriteLine(boardValidationMessage);
+                        continue;
+                    }
 
                     SudokuSolver solver = new SudokuSolver(board);
                     bool success = solver.Solve();
