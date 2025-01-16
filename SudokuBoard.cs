@@ -103,6 +103,51 @@ namespace omegaSudoku
             return used;
         }
 
+        public List<int> GetOptionsInRow(int row)
+        {
+            var result = new List<int>();
+            for (int col = 0; col < SudokuConstants.BoardSize; col++)
+            {
+                var options = board[(row, col)];
+                if (options.Count == 1)
+                {
+                    result.Add(options[0]);
+                }
+            }
+            return result;
+        }
+
+        public List<int> GetOptionsInColumn(int col)
+        {
+            var result = new List<int>();
+            for (int row = 0; row < SudokuConstants.BoardSize; row++)
+            {
+                var options = board[(row, col)];
+                if (options.Count == 1)
+                {
+                    result.Add(options[0]);
+                }
+            }
+            return result;
+        }
+
+        public List<int> GetOptionsInBox(int startRow, int startCol)
+        {
+            var result = new List<int>();
+            for (int r = 0; r < SudokuConstants.SubgridRows; r++)
+            {
+                for (int c = 0; c < SudokuConstants.SubgridCols; c++)
+                {
+                    var options = board[(startRow + r, startCol + c)];
+                    if (options.Count == 1)
+                    {
+                        result.Add(options[0]);
+                    }
+                }
+            }
+            return result;
+        }
+
         public void Print()
         {
             int boardSize = SudokuConstants.BoardSize;
