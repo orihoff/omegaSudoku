@@ -1,40 +1,70 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace omegaSudoku
 {
     public static class SudokuValidator
     {
-        public static string Validate(SudokuBoard board)
+        public static string ValidateInitialBoard(SudokuBoard board)
         {
-            for (int i = 0; i < SudokuConstants.BoardSize; i++)
+            int boardSize = SudokuConstants.BoardSize;
+
+            for (int row = 0; row < boardSize; row++)
             {
-                if (HasDuplicates(board.GetUsedInRow(i)))
-                    return $"Invalid Sudoku: Duplicates in row {i}.";
-                if (HasDuplicates(board.GetUsedInCol(i)))
-                    return $"Invalid Sudoku: Duplicates in column {i}.";
+                var filledValues = board.GetOptionsInRow(row)
+                                        .Where(val => val != 0)
+                                        .ToList();
+
+                if (HasDuplicate(filledValues))
+                {
+                    return $"Invalid Sudoku: duplicate value found in row {row + 1}";
+                }
             }
 
-            for (int row = 0; row < SudokuConstants.BoardSize; row += SudokuConstants.SubgridRows)
+            for (int col = 0; col < boardSize; col++)
             {
-                for (int col = 0; col < SudokuConstants.BoardSize; col += SudokuConstants.SubgridCols)
+                var filledValues = board.GetOptionsInColumn(col)
+                                        .Where(val => val != 0)
+                                        .ToList();
+
+                if (HasDuplicate(filledValues))
                 {
-                    if (HasDuplicates(board.GetUsedInBox(row, col)))
-                        return $"Invalid Sudoku: Duplicates in subgrid starting at ({row + 1}, {col + 1}).";
+                    return $"Invalid Sudoku: duplicate value found in column {col + 1}";
+                }
+            }
+
+            int subgridRows = SudokuConstants.SubgridRows;
+            int subgridCols = SudokuConstants.SubgridCols;
+
+            for (int boxRow = 0; boxRow < boardSize; boxRow += subgridRows)
+            {
+                for (int boxCol = 0; boxCol < boardSize; boxCol += subgridCols)
+                {
+                    var filledValues = board.GetOptionsInBox(boxRow, boxCol)
+                                            .Where(val => val != 0)
+                                            .ToList();
+
+                    if (HasDuplicate(filledValues))
+                    {
+                        return $"Invalid Sudoku: duplicate value found in box starting at ({boxRow + 1}, {boxCol + 1})";
+                    }
                 }
             }
 
             return string.Empty;
         }
 
-        private static bool HasDuplicates(IEnumerable<int> values)
+        private static bool HasDuplicate(IEnumerable<int> values)
         {
-            var seen = new HashSet<int>();
-            foreach (var val in values)
+            var set = new HashSet<int>();
+            foreach (int val in values)
             {
-                if (val != 0 && seen.Contains(val))
+                if (set.Contains(val))
+                {
                     return true;
-                seen.Add(val);
+                }
+                set.Add(val);
             }
             return false;
         }
