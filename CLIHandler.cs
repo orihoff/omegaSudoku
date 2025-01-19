@@ -59,7 +59,7 @@ namespace omegaSudoku
                     Console.WriteLine($"Error: {ex.Message}");
                 }
 
-                Console.WriteLine("---------");
+                Console.WriteLine("");
             }
         }
     }

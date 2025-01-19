@@ -150,17 +150,58 @@ namespace omegaSudoku
 
         public void Print()
         {
-            int boardSize = SudokuConstants.BoardSize;
+            int boardSize = SudokuConstants.BoardSize; // Size of the board
+            int subgridRows = SudokuConstants.SubgridRows; // Rows in each subgrid
+            int subgridCols = SudokuConstants.SubgridCols; // Columns in each subgrid
+
+            // Print column headers
+            Console.Write("   "); // Padding for row numbers
+            for (int c = 0; c < boardSize; c++)
+            {
+                Console.Write($" {c + 1} "); // Column numbers start from 1
+                if ((c + 1) % subgridCols == 0 && c != boardSize - 1)
+                    Console.Write(" ");
+            }
+            Console.WriteLine();
+
+            // Print top border
+            Console.WriteLine("   " + new string('-', boardSize * 3 + subgridCols - 1).Replace("-", "-"));
 
             for (int r = 0; r < boardSize; r++)
             {
+                // Print row numbers
+                Console.Write($"{r + 1,2} "); // Row numbers start from 1
+
                 for (int c = 0; c < boardSize; c++)
                 {
+                    // Print cell value or a dot for empty
                     var opts = board[(r, c)];
-                    Console.Write(opts.Count == 1 ? $"{opts[0]} " : ". ");
+                    Console.Write(opts.Count == 1 ? $" {opts[0]} " : " . ");
+
+                    // Print vertical separators between subgrids
+                    if ((c + 1) % subgridCols == 0 && c != boardSize - 1)
+                        Console.Write("|");
                 }
-                Console.WriteLine();
+
+                Console.WriteLine(); // Move to the next line
+
+                // Print horizontal separator between subgrids
+                if ((r + 1) % subgridRows == 0 && r != boardSize - 1)
+                {
+                    Console.Write("   "); // Align with row numbers
+                    for (int i = 0; i < boardSize; i++)
+                    {
+                        Console.Write("---"); // Horizontal line for each cell
+                        if ((i + 1) % subgridCols == 0 && i != boardSize - 1)
+                            Console.Write("+"); // Add '+' at subgrid intersections
+                    }
+                    Console.WriteLine();
+                }
             }
+
+            // Print bottom border
+            Console.WriteLine("   " + new string('-', boardSize * 3 + subgridCols - 1));
         }
+
     }
 }
