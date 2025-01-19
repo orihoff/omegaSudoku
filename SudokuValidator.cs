@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using omegaSudoku.Exceptions; // Import custom exceptions
 
 namespace omegaSudoku
 {
     public static class SudokuValidator
     {
-        public static string ValidateInitialBoard(SudokuBoard board)
+        public static void ValidateInitialBoard(SudokuBoard board)
         {
             int boardSize = SudokuConstants.BoardSize;
 
+            // Check for duplicates in rows
             for (int row = 0; row < boardSize; row++)
             {
                 var filledValues = board.GetOptionsInRow(row)
@@ -18,10 +20,11 @@ namespace omegaSudoku
 
                 if (HasDuplicate(filledValues))
                 {
-                    return $"Invalid Sudoku: duplicate value found in row {row + 1}";
+                    throw new InvalidBoardException($"Invalid Sudoku: duplicate value found in row {row + 1}");
                 }
             }
 
+            // Check for duplicates in columns
             for (int col = 0; col < boardSize; col++)
             {
                 var filledValues = board.GetOptionsInColumn(col)
@@ -30,10 +33,11 @@ namespace omegaSudoku
 
                 if (HasDuplicate(filledValues))
                 {
-                    return $"Invalid Sudoku: duplicate value found in column {col + 1}";
+                    throw new InvalidBoardException($"Invalid Sudoku: duplicate value found in column {col + 1}");
                 }
             }
 
+            // Check for duplicates in boxes
             int subgridRows = SudokuConstants.SubgridRows;
             int subgridCols = SudokuConstants.SubgridCols;
 
@@ -47,12 +51,10 @@ namespace omegaSudoku
 
                     if (HasDuplicate(filledValues))
                     {
-                        return $"Invalid Sudoku: duplicate value found in box starting at ({boxRow + 1}, {boxCol + 1})";
+                        throw new InvalidBoardException($"Invalid Sudoku: duplicate value found in box starting at ({boxRow + 1}, {boxCol + 1})");
                     }
                 }
             }
-
-            return string.Empty;
         }
 
         private static bool HasDuplicate(IEnumerable<int> values)
