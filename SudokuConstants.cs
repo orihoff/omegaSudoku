@@ -4,7 +4,7 @@ namespace omegaSudoku
 {
     public static class SudokuConstants
     {
-        public static int BoardSize { get; set; } = 9; // Default size
+        public static int BoardSize { get; set; } = 5; // Default size
         public static int SubgridRows { get; private set; } // Rows in subgrid
         public static int SubgridCols { get; private set; } // Columns in subgrid
         public const int MinValue = 1; // Minimal value
@@ -12,27 +12,21 @@ namespace omegaSudoku
 
         static SudokuConstants()
         {
-            CalculateSubgridDimensions();
+            ValidateBoardSizeAndCalculateSubgridDimensions();
         }
 
-        private static void CalculateSubgridDimensions()
+        private static void ValidateBoardSizeAndCalculateSubgridDimensions()
         {
-            bool validDimensionsFound = false;
+            double sqrt = Math.Sqrt(BoardSize);
 
-            for (int i = 1; i <= Math.Sqrt(BoardSize); i++)
+            if (sqrt % 1 != 0) // Check if sqrt is not an integer
             {
-                if (BoardSize % i == 0)
-                {
-                    SubgridRows = i;
-                    SubgridCols = BoardSize / i;
-                    validDimensionsFound = true;
-                }
+                Console.WriteLine($"Invalid board size: {BoardSize}x{BoardSize}. Board size must have an integer square root. Defaulting to 9x9.");
+                BoardSize = 9; // Default value
+                sqrt = Math.Sqrt(BoardSize);
             }
 
-            if (!validDimensionsFound || SubgridRows * SubgridCols != BoardSize)
-            {
-                throw new InvalidOperationException($"Invalid board size: {BoardSize}x{BoardSize}. Unable to determine valid subgrid dimensions.");
-            }
+            SubgridRows = SubgridCols = (int)sqrt;
         }
     }
 }
