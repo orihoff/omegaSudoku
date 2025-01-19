@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using omegaSudoku.Exceptions; // Import custom exceptions
 
 namespace omegaSudoku
 {
@@ -20,7 +21,7 @@ namespace omegaSudoku
 
             string validationMessage = InputValidator.Validate(input);
             if (!string.IsNullOrEmpty(validationMessage))
-                throw new ArgumentException($"Invalid input: {validationMessage}");
+                throw new InvalidInputException($"Invalid input: {validationMessage}");
 
             board.Clear();
             int index = 0;
@@ -46,10 +47,18 @@ namespace omegaSudoku
             return possibilities;
         }
 
-        public List<int> GetOptions(int row, int col) => board[(row, col)];
+        public List<int> GetOptions(int row, int col)
+        {
+            if (!board.ContainsKey((row, col)))
+                throw new System.InvalidOperationException($"Cell ({row}, {col}) does not exist on the board.");
+            return board[(row, col)];
+        }
 
         public void ResetOptions(int row, int col)
         {
+            if (!board.ContainsKey((row, col)))
+                throw new System.InvalidOperationException($"Cannot reset options for cell ({row}, {col}) as it does not exist.");
+
             int minValue = SudokuConstants.MinValue;
             int step = SudokuConstants.Step;
             int boardSize = SudokuConstants.BoardSize;
@@ -63,145 +72,178 @@ namespace omegaSudoku
 
         public IEnumerable<int> GetUsedInRow(int row)
         {
-            var used = new HashSet<int>();
-            for (int col = 0; col < SudokuConstants.BoardSize; col++)
+            try
             {
-                var options = board[(row, col)];
-                if (options.Count == 1)
-                    used.Add(options[0]);
+                var used = new HashSet<int>();
+                for (int col = 0; col < SudokuConstants.BoardSize; col++)
+                {
+                    var options = GetOptions(row, col);
+                    if (options.Count == 1)
+                        used.Add(options[0]);
+                }
+                return used;
             }
-            return used;
+            catch (Exception ex)
+            {
+                throw new RuntimeException($"Error while retrieving used numbers in row {row}: {ex.Message}");
+            }
         }
 
         public IEnumerable<int> GetUsedInCol(int col)
         {
-            var used = new HashSet<int>();
-            for (int row = 0; row < SudokuConstants.BoardSize; row++)
+            try
             {
-                var options = board[(row, col)];
-                if (options.Count == 1)
-                    used.Add(options[0]);
+                var used = new HashSet<int>();
+                for (int row = 0; row < SudokuConstants.BoardSize; row++)
+                {
+                    var options = GetOptions(row, col);
+                    if (options.Count == 1)
+                        used.Add(options[0]);
+                }
+                return used;
             }
-            return used;
+            catch (Exception ex)
+            {
+                throw new RuntimeException($"Error while retrieving used numbers in column {col}: {ex.Message}");
+            }
         }
 
         public IEnumerable<int> GetUsedInBox(int row, int col)
         {
-            var used = new HashSet<int>();
-            int boxRow = (row / SudokuConstants.SubgridRows) * SudokuConstants.SubgridRows;
-            int boxCol = (col / SudokuConstants.SubgridCols) * SudokuConstants.SubgridCols;
-
-            for (int r = 0; r < SudokuConstants.SubgridRows; r++)
+            try
             {
-                for (int c = 0; c < SudokuConstants.SubgridCols; c++)
+                var used = new HashSet<int>();
+                int boxRow = (row / SudokuConstants.SubgridRows) * SudokuConstants.SubgridRows;
+                int boxCol = (col / SudokuConstants.SubgridCols) * SudokuConstants.SubgridCols;
+
+                for (int r = 0; r < SudokuConstants.SubgridRows; r++)
                 {
-                    var options = board[(boxRow + r, boxCol + c)];
-                    if (options.Count == 1)
-                        used.Add(options[0]);
+                    for (int c = 0; c < SudokuConstants.SubgridCols; c++)
+                    {
+                        var options = GetOptions(boxRow + r, boxCol + c);
+                        if (options.Count == 1)
+                            used.Add(options[0]);
+                    }
                 }
+                return used;
             }
-            return used;
+            catch (Exception ex)
+            {
+                throw new RuntimeException($"Error while retrieving used numbers in box containing ({row}, {col}): {ex.Message}");
+            }
         }
 
         public List<int> GetOptionsInRow(int row)
         {
-            var result = new List<int>();
-            for (int col = 0; col < SudokuConstants.BoardSize; col++)
+            try
             {
-                var options = board[(row, col)];
-                if (options.Count == 1)
+                var result = new List<int>();
+                for (int col = 0; col < SudokuConstants.BoardSize; col++)
                 {
-                    result.Add(options[0]);
+                    var options = GetOptions(row, col);
+                    if (options.Count == 1)
+                        result.Add(options[0]);
                 }
+                return result;
             }
-            return result;
+            catch (Exception ex)
+            {
+                throw new RuntimeException($"Error while retrieving options in row {row}: {ex.Message}");
+            }
         }
 
         public List<int> GetOptionsInColumn(int col)
         {
-            var result = new List<int>();
-            for (int row = 0; row < SudokuConstants.BoardSize; row++)
+            try
             {
-                var options = board[(row, col)];
-                if (options.Count == 1)
+                var result = new List<int>();
+                for (int row = 0; row < SudokuConstants.BoardSize; row++)
                 {
-                    result.Add(options[0]);
+                    var options = GetOptions(row, col);
+                    if (options.Count == 1)
+                        result.Add(options[0]);
                 }
+                return result;
             }
-            return result;
+            catch (Exception ex)
+            {
+                throw new RuntimeException($"Error while retrieving options in column {col}: {ex.Message}");
+            }
         }
 
         public List<int> GetOptionsInBox(int startRow, int startCol)
         {
-            var result = new List<int>();
-            for (int r = 0; r < SudokuConstants.SubgridRows; r++)
+            try
             {
-                for (int c = 0; c < SudokuConstants.SubgridCols; c++)
+                var result = new List<int>();
+                for (int r = 0; r < SudokuConstants.SubgridRows; r++)
                 {
-                    var options = board[(startRow + r, startCol + c)];
-                    if (options.Count == 1)
+                    for (int c = 0; c < SudokuConstants.SubgridCols; c++)
                     {
-                        result.Add(options[0]);
+                        var options = GetOptions(startRow + r, startCol + c);
+                        if (options.Count == 1)
+                            result.Add(options[0]);
                     }
                 }
+                return result;
             }
-            return result;
+            catch (Exception ex)
+            {
+                throw new RuntimeException($"Error while retrieving options in box starting at ({startRow}, {startCol}): {ex.Message}");
+            }
         }
 
         public void Print()
         {
-            int boardSize = SudokuConstants.BoardSize; // Size of the board
-            int subgridRows = SudokuConstants.SubgridRows; // Rows in each subgrid
-            int subgridCols = SudokuConstants.SubgridCols; // Columns in each subgrid
-
-            // Print column headers
-            Console.Write("   "); // Padding for row numbers
-            for (int c = 0; c < boardSize; c++)
+            try
             {
-                Console.Write($" {c + 1} "); // Column numbers start from 1
-                if ((c + 1) % subgridCols == 0 && c != boardSize - 1)
-                    Console.Write(" ");
-            }
-            Console.WriteLine();
+                int boardSize = SudokuConstants.BoardSize;
+                int subgridRows = SudokuConstants.SubgridRows;
+                int subgridCols = SudokuConstants.SubgridCols;
 
-            // Print top border
-            Console.WriteLine("   " + new string('-', boardSize * 3 + subgridCols - 1).Replace("-", "-"));
-
-            for (int r = 0; r < boardSize; r++)
-            {
-                // Print row numbers
-                Console.Write($"{r + 1,2} "); // Row numbers start from 1
-
+                Console.Write("   ");
                 for (int c = 0; c < boardSize; c++)
                 {
-                    // Print cell value or a dot for empty
-                    var opts = board[(r, c)];
-                    Console.Write(opts.Count == 1 ? $" {opts[0]} " : " . ");
-
-                    // Print vertical separators between subgrids
+                    Console.Write($" {c + 1} ");
                     if ((c + 1) % subgridCols == 0 && c != boardSize - 1)
-                        Console.Write("|");
+                        Console.Write(" ");
                 }
+                Console.WriteLine();
 
-                Console.WriteLine(); // Move to the next line
+                Console.WriteLine("   " + new string('-', boardSize * 3 + subgridCols - 1));
 
-                // Print horizontal separator between subgrids
-                if ((r + 1) % subgridRows == 0 && r != boardSize - 1)
+                for (int r = 0; r < boardSize; r++)
                 {
-                    Console.Write("   "); // Align with row numbers
-                    for (int i = 0; i < boardSize; i++)
+                    Console.Write($"{r + 1,2} ");
+                    for (int c = 0; c < boardSize; c++)
                     {
-                        Console.Write("---"); // Horizontal line for each cell
-                        if ((i + 1) % subgridCols == 0 && i != boardSize - 1)
-                            Console.Write("+"); // Add '+' at subgrid intersections
+                        var opts = GetOptions(r, c);
+                        Console.Write(opts.Count == 1 ? $" {opts[0]} " : " . ");
+
+                        if ((c + 1) % subgridCols == 0 && c != boardSize - 1)
+                            Console.Write("|");
                     }
                     Console.WriteLine();
+
+                    if ((r + 1) % subgridRows == 0 && r != boardSize - 1)
+                    {
+                        Console.Write("   ");
+                        for (int i = 0; i < boardSize; i++)
+                        {
+                            Console.Write("---");
+                            if ((i + 1) % subgridCols == 0 && i != boardSize - 1)
+                                Console.Write("+");
+                        }
+                        Console.WriteLine();
+                    }
                 }
+
+                Console.WriteLine("   " + new string('-', boardSize * 3 + subgridCols - 1));
             }
-
-            // Print bottom border
-            Console.WriteLine("   " + new string('-', boardSize * 3 + subgridCols - 1));
+            catch (Exception ex)
+            {
+                throw new RuntimeException($"Error while printing the board: {ex.Message}");
+            }
         }
-
     }
 }
