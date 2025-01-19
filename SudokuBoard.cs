@@ -19,9 +19,8 @@ namespace omegaSudoku
             int minValue = SudokuConstants.MinValue;
             int step = SudokuConstants.Step;
 
-            string validationMessage = InputValidator.Validate(input);
-            if (!string.IsNullOrEmpty(validationMessage))
-                throw new InvalidInputException($"Invalid input: {validationMessage}");
+            // Validate input - will throw InvalidInputException if invalid
+            InputValidator.Validate(input);
 
             board.Clear();
             int index = 0;
@@ -38,6 +37,7 @@ namespace omegaSudoku
                 }
             }
         }
+
 
         private List<int> CreatePossibilitiesList(int minValue, int boardSize, int step)
         {
