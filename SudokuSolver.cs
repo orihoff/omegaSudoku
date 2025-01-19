@@ -5,69 +5,93 @@ namespace omegaSudoku
 {
     public class SudokuSolver
     {
-        private SudokuBoard board;
+        private readonly SudokuBoard board;
+        private readonly bool[,] rowUsed;
+        private readonly bool[,] colUsed;
+        private readonly bool[,] boxUsed;
 
         public SudokuSolver(SudokuBoard board)
         {
             this.board = board;
+            int n = SudokuConstants.BoardSize;
+            rowUsed = new bool[n, n];
+            colUsed = new bool[n, n];
+            boxUsed = new bool[n, n];
+            InitializeUsed();
+        }
+
+        private void InitializeUsed()
+        {
+            int n = SudokuConstants.BoardSize;
+            for (int r = 0; r < n; r++)
+            {
+                for (int c = 0; c < n; c++)
+                {
+                    var opts = board.GetOptions(r, c);
+                    if (opts.Count == 1)
+                    {
+                        int val = opts[0];
+                        int idx = (val - SudokuConstants.MinValue) / SudokuConstants.Step;
+                        rowUsed[r, idx] = true;
+                        colUsed[c, idx] = true;
+                        boxUsed[GetBoxIndex(r, c), idx] = true;
+                    }
+                }
+            }
+        }
+
+        private int GetBoxIndex(int r, int c)
+        {
+            return (r / SudokuConstants.SubgridRows) * SudokuConstants.SubgridRows
+                 + (c / SudokuConstants.SubgridCols);
         }
 
         public bool Solve()
         {
-            var stopwatch = Stopwatch.StartNew(); // Start timing
-
+            var sw = Stopwatch.StartNew();
             bool solved = Backtrack(0, 0);
-
-            stopwatch.Stop(); // Stop timing
-            Console.WriteLine($"Time taken to solve: {stopwatch.ElapsedMilliseconds} ms");
-
+            sw.Stop();
+            Console.WriteLine($"Time taken to solve: {sw.ElapsedMilliseconds} ms");
             return solved;
         }
 
         private bool Backtrack(int row, int col)
         {
-            // If we've reached the end of the board, we're done
-            if (row == SudokuConstants.BoardSize)
-                return true;
+            int n = SudokuConstants.BoardSize;
+            if (row == n) return true;
 
-            // Determine the next cell
-            int nextRow = col == SudokuConstants.BoardSize - 1 ? row + 1 : row;
-            int nextCol = (col + 1) % SudokuConstants.BoardSize;
+            int nextCol = (col + 1) % n;
+            int nextRow = (nextCol == 0) ? row + 1 : row;
 
-            // If the cell is already filled, move to the next one
-            if (board.GetOptions(row, col).Count == 1)
+            var opts = board.GetOptions(row, col);
+            if (opts.Count == 1)
                 return Backtrack(nextRow, nextCol);
 
-            // Try every possible value for the current cell
-            for (int num = SudokuConstants.MinValue;
-                 num < SudokuConstants.MinValue + SudokuConstants.BoardSize * SudokuConstants.Step;
-                 num += SudokuConstants.Step)
+            int start = SudokuConstants.MinValue;
+            int end = start + (n - 1) * SudokuConstants.Step;
+
+            for (int val = start; val <= end; val += SudokuConstants.Step)
             {
-                if (IsValid(row, col, num))
-                {
-                    // Update the cell with the chosen value
-                    board.GetOptions(row, col).Clear();
-                    board.GetOptions(row, col).Add(num);
+                int idx = (val - start) / SudokuConstants.Step;
+                if (rowUsed[row, idx] || colUsed[col, idx] || boxUsed[GetBoxIndex(row, col), idx])
+                    continue;
 
-                    // Recursively solve the rest of the board
-                    if (Backtrack(nextRow, nextCol))
-                        return true;
+                opts.Clear();
+                opts.Add(val);
 
-                    // If it fails, reset the cell
-                    board.ResetOptions(row, col);
-                }
+                rowUsed[row, idx] = true;
+                colUsed[col, idx] = true;
+                boxUsed[GetBoxIndex(row, col), idx] = true;
+
+                if (Backtrack(nextRow, nextCol))
+                    return true;
+
+                board.ResetOptions(row, col);
+                rowUsed[row, idx] = false;
+                colUsed[col, idx] = false;
+                boxUsed[GetBoxIndex(row, col), idx] = false;
             }
-
-            // If no number fits, backtrack
             return false;
-        }
-
-        private bool IsValid(int row, int col, int num)
-        {
-            // Check if the number is already used in the row, column, or box
-            return !board.GetUsedInRow(row).Contains(num) &&
-                   !board.GetUsedInCol(col).Contains(num) &&
-                   !board.GetUsedInBox(row, col).Contains(num);
         }
     }
 }
