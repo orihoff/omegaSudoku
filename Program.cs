@@ -4,7 +4,15 @@
     {
         public static void Main(string[] args)
         {
-            new CLIHandler().Run();
+            try
+            {
+                new CLIHandler().Run();
+            }
+            catch (Exception ex)
+            {
+                // Handle any unhandled exceptions even they dont exist
+                Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+            }
         }
     }
 }
