@@ -1,8 +1,8 @@
-﻿using omegaSudoku.Exceptions;
+﻿using omegaSudoku;
 using System;
 using System.Collections.Generic;
 
-namespace omegaSudoku
+namespace HoffSudoku
 {
     public class SudokuBoard
     {
@@ -112,8 +112,8 @@ namespace omegaSudoku
             try
             {
                 var used = new HashSet<int>();
-                int boxRow = (row / SudokuConstants.SubgridRows) * SudokuConstants.SubgridRows;
-                int boxCol = (col / SudokuConstants.SubgridCols) * SudokuConstants.SubgridCols;
+                int boxRow = row / SudokuConstants.SubgridRows * SudokuConstants.SubgridRows;
+                int boxCol = col / SudokuConstants.SubgridCols * SudokuConstants.SubgridCols;
 
                 for (int r = 0; r < SudokuConstants.SubgridRows; r++)
                 {
@@ -245,7 +245,7 @@ namespace omegaSudoku
             }
         }
 
-     
+
         public void SetValue(int row, int col, int value)
         {
             if (!board.ContainsKey((row, col)))

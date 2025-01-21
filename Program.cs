@@ -1,4 +1,6 @@
-﻿namespace omegaSudoku
+﻿using HoffSudoku;
+
+namespace omegaSudoku
 {
     public class Program
     {

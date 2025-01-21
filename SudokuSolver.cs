@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 
-namespace omegaSudoku
+namespace HoffSudoku
 {
     public class SudokuSolver
     {
@@ -53,8 +53,8 @@ namespace omegaSudoku
 
         private int GetBoxIndex(int r, int c)
         {
-            return (r / SudokuConstants.SubgridRows) * SudokuConstants.SubgridRows
-                 + (c / SudokuConstants.SubgridCols);
+            return r / SudokuConstants.SubgridRows * SudokuConstants.SubgridRows
+                 + c / SudokuConstants.SubgridCols;
         }
 
         public bool Solve()
@@ -136,10 +136,10 @@ namespace omegaSudoku
                 // Backup the current state
                 var backupList = new List<int>(chosenCellOptions);
 
-                
+
                 board.SetValue(chosenRow, chosenCol, val);
 
-               
+
                 rowUsed[chosenRow, idx] = true;
                 colUsed[chosenCol, idx] = true;
                 boxUsed[GetBoxIndex(chosenRow, chosenCol), idx] = true;
@@ -147,8 +147,8 @@ namespace omegaSudoku
                 if (Backtrack())
                     return true;
 
-                
-                board.SetValue(chosenRow, chosenCol, 0); 
+
+                board.SetValue(chosenRow, chosenCol, 0);
                 rowUsed[chosenRow, idx] = false;
                 colUsed[chosenCol, idx] = false;
                 boxUsed[GetBoxIndex(chosenRow, chosenCol), idx] = false;

@@ -1,4 +1,4 @@
-﻿namespace omegaSudoku.Exceptions
+﻿namespace HoffSudoku
 {
     // Base class for all custom Sudoku exceptions
     public class SudokuException : Exception

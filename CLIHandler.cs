@@ -1,7 +1,8 @@
-﻿using omegaSudoku.Exceptions;
-using System;
+﻿using System;
+using HoffSudoku;
+using omegaSudoku;
 
-namespace omegaSudoku
+namespace HoffSudoku
 {
     public class CLIHandler
     {

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using omegaSudoku.Exceptions; // Import custom exceptions
+using System.Linq; // Import custom exceptions
 
-namespace omegaSudoku
+namespace HoffSudoku
 {
     public static class SudokuValidator
     {

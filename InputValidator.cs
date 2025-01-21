@@ -1,5 +1,6 @@
-﻿using System;
-using omegaSudoku.Exceptions; // Import custom exceptions
+﻿using HoffSudoku;
+using System;
+ // Import custom exceptions
 
 namespace omegaSudoku
 {

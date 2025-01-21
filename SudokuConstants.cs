@@ -1,7 +1,4 @@
-﻿using System;
-using omegaSudoku.Exceptions;
-
-namespace omegaSudoku
+﻿namespace HoffSudoku
 {
     public static class SudokuConstants
     {
