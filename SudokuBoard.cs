@@ -1,6 +1,6 @@
-﻿using System;
+﻿using omegaSudoku.Exceptions;
+using System;
 using System.Collections.Generic;
-using omegaSudoku.Exceptions; // Import custom exceptions
 
 namespace omegaSudoku
 {
@@ -38,7 +38,6 @@ namespace omegaSudoku
             }
         }
 
-
         private List<int> CreatePossibilitiesList(int minValue, int boardSize, int step)
         {
             var possibilities = new List<int>();
@@ -50,14 +49,14 @@ namespace omegaSudoku
         public List<int> GetOptions(int row, int col)
         {
             if (!board.ContainsKey((row, col)))
-                throw new System.InvalidOperationException($"Cell ({row}, {col}) does not exist on the board.");
+                throw new InvalidOperationException($"Cell ({row}, {col}) does not exist on the board.");
             return board[(row, col)];
         }
 
         public void ResetOptions(int row, int col)
         {
             if (!board.ContainsKey((row, col)))
-                throw new System.InvalidOperationException($"Cannot reset options for cell ({row}, {col}) as it does not exist.");
+                throw new InvalidOperationException($"Cannot reset options for cell ({row}, {col}) as it does not exist.");
 
             int minValue = SudokuConstants.MinValue;
             int step = SudokuConstants.Step;
@@ -243,6 +242,22 @@ namespace omegaSudoku
             catch (Exception ex)
             {
                 throw new RuntimeException($"Error while printing the board: {ex.Message}");
+            }
+        }
+
+     
+        public void SetValue(int row, int col, int value)
+        {
+            if (!board.ContainsKey((row, col)))
+                throw new InvalidOperationException($"Cell ({row}, {col}) does not exist on the board.");
+
+            if (value == 0)
+            {
+                board[(row, col)] = CreatePossibilitiesList(SudokuConstants.MinValue, SudokuConstants.BoardSize, SudokuConstants.Step);
+            }
+            else
+            {
+                board[(row, col)] = new List<int> { value };
             }
         }
     }
