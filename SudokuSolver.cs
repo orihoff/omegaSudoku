@@ -31,7 +31,7 @@ namespace omegaSudoku
                     if (opts.Count == 1)
                     {
                         int val = opts[0];
-                        int idx = (val - SudokuConstants.MinValue) / SudokuConstants.Step;
+                        int idx = val - SudokuConstants.MinValue;
                         rowUsed[r, idx] = true;
                         colUsed[c, idx] = true;
                         boxUsed[GetBoxIndex(r, c), idx] = true;
@@ -49,48 +49,86 @@ namespace omegaSudoku
         public bool Solve()
         {
             var sw = Stopwatch.StartNew();
-            bool solved = Backtrack(0, 0);
+            bool solved = Backtrack();
             sw.Stop();
             Console.WriteLine($"Time taken to solve: {sw.ElapsedMilliseconds} ms");
             return solved;
         }
 
-        private bool Backtrack(int row, int col)
+        private bool Backtrack()
         {
             int n = SudokuConstants.BoardSize;
-            if (row == n) return true;
+            int minOptionsCount = n + 1;
+            int chosenRow = -1;
+            int chosenCol = -1;
 
-            int nextCol = (col + 1) % n;
-            int nextRow = (nextCol == 0) ? row + 1 : row;
-
-            var opts = board.GetOptions(row, col);
-            if (opts.Count == 1)
-                return Backtrack(nextRow, nextCol);
-
-            int start = SudokuConstants.MinValue;
-            int end = start + (n - 1) * SudokuConstants.Step;
-
-            for (int val = start; val <= end; val += SudokuConstants.Step)
+            for (int r = 0; r < n; r++)
             {
-                int idx = (val - start) / SudokuConstants.Step;
-                if (rowUsed[row, idx] || colUsed[col, idx] || boxUsed[GetBoxIndex(row, col), idx])
+                for (int c = 0; c < n; c++)
+                {
+                    var opts = board.GetOptions(r, c);
+                    if (opts.Count == 1) continue;
+
+                    int count = 0;
+                    foreach (int val in opts)
+                    {
+                        int idx = val - SudokuConstants.MinValue;
+                        if (!rowUsed[r, idx] &&
+                            !colUsed[c, idx] &&
+                            !boxUsed[GetBoxIndex(r, c), idx])
+                        {
+                            count++;
+                        }
+                    }
+
+                    if (count == 0)
+                        return false;
+
+                    if (count < minOptionsCount)
+                    {
+                        minOptionsCount = count;
+                        chosenRow = r;
+                        chosenCol = c;
+                    }
+                }
+            }
+
+            if (chosenRow == -1 && chosenCol == -1)
+                return true;
+
+            var chosenCellOptions = board.GetOptions(chosenRow, chosenCol);
+
+            foreach (int val in chosenCellOptions.ToList())
+            {
+                int idx = val - SudokuConstants.MinValue;
+
+                if (rowUsed[chosenRow, idx] ||
+                    colUsed[chosenCol, idx] ||
+                    boxUsed[GetBoxIndex(chosenRow, chosenCol), idx])
+                {
                     continue;
+                }
 
-                opts.Clear();
-                opts.Add(val);
+                var backupList = new System.Collections.Generic.List<int>(chosenCellOptions);
 
-                rowUsed[row, idx] = true;
-                colUsed[col, idx] = true;
-                boxUsed[GetBoxIndex(row, col), idx] = true;
+                chosenCellOptions.Clear();
+                chosenCellOptions.Add(val);
 
-                if (Backtrack(nextRow, nextCol))
+                rowUsed[chosenRow, idx] = true;
+                colUsed[chosenCol, idx] = true;
+                boxUsed[GetBoxIndex(chosenRow, chosenCol), idx] = true;
+
+                if (Backtrack())
                     return true;
 
-                board.ResetOptions(row, col);
-                rowUsed[row, idx] = false;
-                colUsed[col, idx] = false;
-                boxUsed[GetBoxIndex(row, col), idx] = false;
+                chosenCellOptions.Clear();
+                chosenCellOptions.AddRange(backupList);
+
+                rowUsed[chosenRow, idx] = false;
+                colUsed[chosenCol, idx] = false;
+                boxUsed[GetBoxIndex(chosenRow, chosenCol), idx] = false;
             }
+
             return false;
         }
     }
