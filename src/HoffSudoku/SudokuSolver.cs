@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace HoffSudoku
 {
@@ -20,6 +21,7 @@ namespace HoffSudoku
             boxUsed = new bool[n, n];
             InitializeUsed();
         }
+
         private void InitializeUsed()
         {
             int n = SudokuConstants.BoardSize;
@@ -33,7 +35,7 @@ namespace HoffSudoku
                     var opts = board.GetOptions(r, c);
                     if (opts.Count == 1)
                     {
-                        int val = opts[0];
+                        int val = opts.First();
                         if ((val - minValue) % step != 0)
                         {
                             throw new InvalidOperationException($"Value {val} at cell ({r}, {c}) does not conform to the step {step}.");
@@ -82,6 +84,8 @@ namespace HoffSudoku
                     if (opts.Count == 1) continue;
 
                     int count = 0;
+                    HashSet<int> validOptions = new HashSet<int>();
+
                     foreach (int val in opts)
                     {
                         if ((val - SudokuConstants.MinValue) % step != 0)
@@ -95,9 +99,11 @@ namespace HoffSudoku
                             !colUsed[c, idx] &&
                             !boxUsed[GetBoxIndex(r, c), idx])
                         {
-                            count++;
+                            validOptions.Add(val);
                         }
                     }
+
+                    count = validOptions.Count;
 
                     if (count == 0)
                         return false;
@@ -134,11 +140,9 @@ namespace HoffSudoku
                 }
 
                 // Backup the current state
-                var backupList = new List<int>(chosenCellOptions);
-
+                var backupSet = new HashSet<int>(chosenCellOptions);
 
                 board.SetValue(chosenRow, chosenCol, val);
-
 
                 rowUsed[chosenRow, idx] = true;
                 colUsed[chosenCol, idx] = true;
@@ -146,7 +150,6 @@ namespace HoffSudoku
 
                 if (Backtrack())
                     return true;
-
 
                 board.SetValue(chosenRow, chosenCol, 0);
                 rowUsed[chosenRow, idx] = false;

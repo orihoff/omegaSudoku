@@ -6,11 +6,11 @@ namespace HoffSudoku
 {
     public class SudokuBoard
     {
-        private readonly Dictionary<(int, int), List<int>> board;
+        private readonly Dictionary<(int, int), HashSet<int>> board;
 
         public SudokuBoard()
         {
-            board = new Dictionary<(int, int), List<int>>();
+            board = new Dictionary<(int, int), HashSet<int>>();
         }
 
         public void Initialize(string input)
@@ -32,21 +32,21 @@ namespace HoffSudoku
                     int val = input[index++] - '0';
 
                     board[(r, c)] = val == 0
-                        ? CreatePossibilitiesList(minValue, boardSize, step)
-                        : new List<int> { val };
+                        ? new HashSet<int>(CreatePossibilitiesList(minValue, boardSize, step))
+                        : new HashSet<int> { val };
                 }
             }
         }
 
-        private List<int> CreatePossibilitiesList(int minValue, int boardSize, int step)
+        private HashSet<int> CreatePossibilitiesList(int minValue, int boardSize, int step)
         {
-            var possibilities = new List<int>();
+            var possibilities = new HashSet<int>();
             for (int i = minValue; i < minValue + boardSize * step; i += step)
                 possibilities.Add(i);
             return possibilities;
         }
 
-        public List<int> GetOptions(int row, int col)
+        public HashSet<int> GetOptions(int row, int col)
         {
             if (!board.ContainsKey((row, col)))
                 throw new InvalidOperationException($"Cell ({row}, {col}) does not exist on the board.");
@@ -71,180 +71,131 @@ namespace HoffSudoku
 
         public IEnumerable<int> GetUsedInRow(int row)
         {
-            try
+            var used = new HashSet<int>();
+            for (int col = 0; col < SudokuConstants.BoardSize; col++)
             {
-                var used = new HashSet<int>();
-                for (int col = 0; col < SudokuConstants.BoardSize; col++)
-                {
-                    var options = GetOptions(row, col);
-                    if (options.Count == 1)
-                        used.Add(options[0]);
-                }
-                return used;
+                var options = GetOptions(row, col);
+                if (options.Count == 1)
+                    used.Add(options.First());
             }
-            catch (Exception ex)
-            {
-                throw new RuntimeException($"Error while retrieving used numbers in row {row}: {ex.Message}");
-            }
+            return used;
         }
 
         public IEnumerable<int> GetUsedInCol(int col)
         {
-            try
+            var used = new HashSet<int>();
+            for (int row = 0; row < SudokuConstants.BoardSize; row++)
             {
-                var used = new HashSet<int>();
-                for (int row = 0; row < SudokuConstants.BoardSize; row++)
-                {
-                    var options = GetOptions(row, col);
-                    if (options.Count == 1)
-                        used.Add(options[0]);
-                }
-                return used;
+                var options = GetOptions(row, col);
+                if (options.Count == 1)
+                    used.Add(options.First());
             }
-            catch (Exception ex)
-            {
-                throw new RuntimeException($"Error while retrieving used numbers in column {col}: {ex.Message}");
-            }
+            return used;
         }
 
         public IEnumerable<int> GetUsedInBox(int row, int col)
         {
-            try
-            {
-                var used = new HashSet<int>();
-                int boxRow = row / SudokuConstants.SubgridRows * SudokuConstants.SubgridRows;
-                int boxCol = col / SudokuConstants.SubgridCols * SudokuConstants.SubgridCols;
+            var used = new HashSet<int>();
+            int boxRow = row / SudokuConstants.SubgridRows * SudokuConstants.SubgridRows;
+            int boxCol = col / SudokuConstants.SubgridCols * SudokuConstants.SubgridCols;
 
-                for (int r = 0; r < SudokuConstants.SubgridRows; r++)
-                {
-                    for (int c = 0; c < SudokuConstants.SubgridCols; c++)
-                    {
-                        var options = GetOptions(boxRow + r, boxCol + c);
-                        if (options.Count == 1)
-                            used.Add(options[0]);
-                    }
-                }
-                return used;
-            }
-            catch (Exception ex)
+            for (int r = 0; r < SudokuConstants.SubgridRows; r++)
             {
-                throw new RuntimeException($"Error while retrieving used numbers in box containing ({row}, {col}): {ex.Message}");
-            }
-        }
-
-        public List<int> GetOptionsInRow(int row)
-        {
-            try
-            {
-                var result = new List<int>();
-                for (int col = 0; col < SudokuConstants.BoardSize; col++)
+                for (int c = 0; c < SudokuConstants.SubgridCols; c++)
                 {
-                    var options = GetOptions(row, col);
+                    var options = GetOptions(boxRow + r, boxCol + c);
                     if (options.Count == 1)
-                        result.Add(options[0]);
+                        used.Add(options.First());
                 }
-                return result;
             }
-            catch (Exception ex)
-            {
-                throw new RuntimeException($"Error while retrieving options in row {row}: {ex.Message}");
-            }
+            return used;
         }
 
-        public List<int> GetOptionsInColumn(int col)
+        // New Methods:
+        public HashSet<int> GetOptionsInRow(int row)
         {
-            try
+            var result = new HashSet<int>();
+            for (int col = 0; col < SudokuConstants.BoardSize; col++)
             {
-                var result = new List<int>();
-                for (int row = 0; row < SudokuConstants.BoardSize; row++)
+                var options = GetOptions(row, col);
+                if (options.Count == 1)
+                    result.Add(options.First());
+            }
+            return result;
+        }
+
+        public HashSet<int> GetOptionsInColumn(int col)
+        {
+            var result = new HashSet<int>();
+            for (int row = 0; row < SudokuConstants.BoardSize; row++)
+            {
+                var options = GetOptions(row, col);
+                if (options.Count == 1)
+                    result.Add(options.First());
+            }
+            return result;
+        }
+
+        public HashSet<int> GetOptionsInBox(int startRow, int startCol)
+        {
+            var result = new HashSet<int>();
+            for (int r = 0; r < SudokuConstants.SubgridRows; r++)
+            {
+                for (int c = 0; c < SudokuConstants.SubgridCols; c++)
                 {
-                    var options = GetOptions(row, col);
+                    var options = GetOptions(startRow + r, startCol + c);
                     if (options.Count == 1)
-                        result.Add(options[0]);
+                        result.Add(options.First());
                 }
-                return result;
             }
-            catch (Exception ex)
-            {
-                throw new RuntimeException($"Error while retrieving options in column {col}: {ex.Message}");
-            }
-        }
-
-        public List<int> GetOptionsInBox(int startRow, int startCol)
-        {
-            try
-            {
-                var result = new List<int>();
-                for (int r = 0; r < SudokuConstants.SubgridRows; r++)
-                {
-                    for (int c = 0; c < SudokuConstants.SubgridCols; c++)
-                    {
-                        var options = GetOptions(startRow + r, startCol + c);
-                        if (options.Count == 1)
-                            result.Add(options[0]);
-                    }
-                }
-                return result;
-            }
-            catch (Exception ex)
-            {
-                throw new RuntimeException($"Error while retrieving options in box starting at ({startRow}, {startCol}): {ex.Message}");
-            }
+            return result;
         }
 
         public void Print()
         {
-            try
-            {
-                int boardSize = SudokuConstants.BoardSize;
-                int subgridRows = SudokuConstants.SubgridRows;
-                int subgridCols = SudokuConstants.SubgridCols;
+            int boardSize = SudokuConstants.BoardSize;
+            int subgridRows = SudokuConstants.SubgridRows;
+            int subgridCols = SudokuConstants.SubgridCols;
 
-                Console.Write("   ");
+            Console.Write("   ");
+            for (int c = 0; c < boardSize; c++)
+            {
+                Console.Write($" {c + 1} ");
+                if ((c + 1) % subgridCols == 0 && c != boardSize - 1)
+                    Console.Write(" ");
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("   " + new string('-', boardSize * 3 + subgridCols - 1));
+
+            for (int r = 0; r < boardSize; r++)
+            {
+                Console.Write($"{r + 1,2} ");
                 for (int c = 0; c < boardSize; c++)
                 {
-                    Console.Write($" {c + 1} ");
+                    var opts = GetOptions(r, c);
+                    Console.Write(opts.Count == 1 ? $" {opts.First()} " : " . ");
+
                     if ((c + 1) % subgridCols == 0 && c != boardSize - 1)
-                        Console.Write(" ");
+                        Console.Write("|");
                 }
                 Console.WriteLine();
 
-                Console.WriteLine("   " + new string('-', boardSize * 3 + subgridCols - 1));
-
-                for (int r = 0; r < boardSize; r++)
+                if ((r + 1) % subgridRows == 0 && r != boardSize - 1)
                 {
-                    Console.Write($"{r + 1,2} ");
-                    for (int c = 0; c < boardSize; c++)
+                    Console.Write("   ");
+                    for (int i = 0; i < boardSize; i++)
                     {
-                        var opts = GetOptions(r, c);
-                        Console.Write(opts.Count == 1 ? $" {opts[0]} " : " . ");
-
-                        if ((c + 1) % subgridCols == 0 && c != boardSize - 1)
-                            Console.Write("|");
+                        Console.Write("---");
+                        if ((i + 1) % subgridCols == 0 && i != boardSize - 1)
+                            Console.Write("+");
                     }
                     Console.WriteLine();
-
-                    if ((r + 1) % subgridRows == 0 && r != boardSize - 1)
-                    {
-                        Console.Write("   ");
-                        for (int i = 0; i < boardSize; i++)
-                        {
-                            Console.Write("---");
-                            if ((i + 1) % subgridCols == 0 && i != boardSize - 1)
-                                Console.Write("+");
-                        }
-                        Console.WriteLine();
-                    }
                 }
+            }
 
-                Console.WriteLine("   " + new string('-', boardSize * 3 + subgridCols - 1));
-            }
-            catch (Exception ex)
-            {
-                throw new RuntimeException($"Error while printing the board: {ex.Message}");
-            }
+            Console.WriteLine("   " + new string('-', boardSize * 3 + subgridCols - 1));
         }
-
 
         public void SetValue(int row, int col, int value)
         {
@@ -253,11 +204,11 @@ namespace HoffSudoku
 
             if (value == 0)
             {
-                board[(row, col)] = CreatePossibilitiesList(SudokuConstants.MinValue, SudokuConstants.BoardSize, SudokuConstants.Step);
+                board[(row, col)] = new HashSet<int>(CreatePossibilitiesList(SudokuConstants.MinValue, SudokuConstants.BoardSize, SudokuConstants.Step));
             }
             else
             {
-                board[(row, col)] = new List<int> { value };
+                board[(row, col)] = new HashSet<int> { value };
             }
         }
     }
