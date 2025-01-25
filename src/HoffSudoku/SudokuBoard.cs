@@ -21,7 +21,6 @@ namespace HoffSudoku
             int minValue = SudokuConstants.MinValue;
             int step = SudokuConstants.Step;
 
-            // Validate input - will throw InvalidInputException if invalid
             InputValidator.Validate(input);
 
             board.Clear();
@@ -152,30 +151,41 @@ namespace HoffSudoku
             return result;
         }
 
+        private string GetDisplayValue(int value)
+        {
+            if (value >= 1 && value <= 9)
+                return value.ToString();
+            else if (value > 9)
+                return ((char)(value + 48)).ToString();
+            else
+                return ".";
+        }
+
         public void Print()
         {
             int boardSize = SudokuConstants.BoardSize;
             int subgridRows = SudokuConstants.SubgridRows;
             int subgridCols = SudokuConstants.SubgridCols;
 
-            Console.Write("   ");
+            Console.Write("    ");
             for (int c = 0; c < boardSize; c++)
             {
-                Console.Write($" {c + 1} ");
+                Console.Write($"{c + 1,3} ");
                 if ((c + 1) % subgridCols == 0 && c != boardSize - 1)
                     Console.Write(" ");
             }
             Console.WriteLine();
 
-            Console.WriteLine("   " + new string('-', boardSize * 3 + subgridCols - 1));
+            Console.WriteLine("   " + new string('-', boardSize * 4 + subgridCols - 1));
 
             for (int r = 0; r < boardSize; r++)
             {
-                Console.Write($"{r + 1,2} ");
+                Console.Write($"{r + 1,2} |");
                 for (int c = 0; c < boardSize; c++)
                 {
                     var opts = GetOptions(r, c);
-                    Console.Write(opts.Count == 1 ? $" {opts.First()} " : " . ");
+                    string display = opts.Count == 1 ? GetDisplayValue(opts.First()) : ".";
+                    Console.Write($"{display,3} ");
 
                     if ((c + 1) % subgridCols == 0 && c != boardSize - 1)
                         Console.Write("|");
@@ -187,7 +197,7 @@ namespace HoffSudoku
                     Console.Write("   ");
                     for (int i = 0; i < boardSize; i++)
                     {
-                        Console.Write("---");
+                        Console.Write("----");
                         if ((i + 1) % subgridCols == 0 && i != boardSize - 1)
                             Console.Write("+");
                     }
@@ -195,7 +205,7 @@ namespace HoffSudoku
                 }
             }
 
-            Console.WriteLine("   " + new string('-', boardSize * 3 + subgridCols - 1));
+            Console.WriteLine("   " + new string('-', boardSize * 4 + subgridCols - 1));
         }
 
         public void SetValue(int row, int col, int value)
@@ -213,7 +223,6 @@ namespace HoffSudoku
             }
         }
 
-        // Method to return the board as a string
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
@@ -226,7 +235,7 @@ namespace HoffSudoku
                     var options = GetOptions(r, c);
                     if (options.Count == 1)
                     {
-                        sb.Append(options.First());
+                        sb.Append(GetDisplayValue(options.First()));
                     }
                     else
                     {
@@ -235,7 +244,7 @@ namespace HoffSudoku
                 }
                 if (r < boardSize - 1)
                 {
-                    sb.AppendLine(); 
+                    sb.AppendLine();
                 }
             }
 
