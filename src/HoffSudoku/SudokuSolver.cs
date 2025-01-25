@@ -36,15 +36,8 @@ namespace HoffSudoku
                     if (opts.Count == 1)
                     {
                         int val = opts.First();
-                        if ((val - minValue) % step != 0)
-                        {
-                            throw new InvalidOperationException($"Value {val} at cell ({r}, {c}) does not conform to the step {step}.");
-                        }
                         int idx = (val - minValue) / step;
-                        if (idx < 0 || idx >= n)
-                        {
-                            throw new InvalidOperationException($"Value {val} at cell ({r}, {c}) is out of valid range after step adjustment.");
-                        }
+
                         rowUsed[r, idx] = true;
                         colUsed[c, idx] = true;
                         boxUsed[GetBoxIndex(r, c), idx] = true;
@@ -55,8 +48,7 @@ namespace HoffSudoku
 
         private int GetBoxIndex(int r, int c)
         {
-            return r / SudokuConstants.SubgridRows * SudokuConstants.SubgridRows
-                 + c / SudokuConstants.SubgridCols;
+            return (r / SudokuConstants.SubgridRows) * SudokuConstants.SubgridCols + (c / SudokuConstants.SubgridCols);
         }
 
         public bool Solve()
@@ -71,10 +63,8 @@ namespace HoffSudoku
         private bool Backtrack()
         {
             int n = SudokuConstants.BoardSize;
-            int step = SudokuConstants.Step;
             int minOptionsCount = n + 1;
-            int chosenRow = -1;
-            int chosenCol = -1;
+            int chosenRow = -1, chosenCol = -1;
 
             for (int r = 0; r < n; r++)
             {
@@ -83,34 +73,20 @@ namespace HoffSudoku
                     var opts = board.GetOptions(r, c);
                     if (opts.Count == 1) continue;
 
-                    int count = 0;
-                    HashSet<int> validOptions = new HashSet<int>();
-
+                    int validCount = 0;
                     foreach (int val in opts)
                     {
-                        if ((val - SudokuConstants.MinValue) % step != 0)
-                            continue;
-
-                        int idx = (val - SudokuConstants.MinValue) / step;
-                        if (idx < 0 || idx >= n)
-                            continue;
-
-                        if (!rowUsed[r, idx] &&
-                            !colUsed[c, idx] &&
-                            !boxUsed[GetBoxIndex(r, c), idx])
-                        {
-                            validOptions.Add(val);
-                        }
+                        int idx = (val - SudokuConstants.MinValue) / SudokuConstants.Step;
+                        if (!rowUsed[r, idx] && !colUsed[c, idx] && !boxUsed[GetBoxIndex(r, c), idx])
+                            validCount++;
                     }
 
-                    count = validOptions.Count;
-
-                    if (count == 0)
+                    if (validCount == 0)
                         return false;
 
-                    if (count < minOptionsCount)
+                    if (validCount < minOptionsCount)
                     {
-                        minOptionsCount = count;
+                        minOptionsCount = validCount;
                         chosenRow = r;
                         chosenCol = c;
                     }
@@ -124,26 +100,12 @@ namespace HoffSudoku
 
             foreach (int val in chosenCellOptions)
             {
-                if ((val - SudokuConstants.MinValue) % step != 0)
+                int idx = (val - SudokuConstants.MinValue) / SudokuConstants.Step;
+
+                if (rowUsed[chosenRow, idx] || colUsed[chosenCol, idx] || boxUsed[GetBoxIndex(chosenRow, chosenCol), idx])
                     continue;
-
-                int idx = (val - SudokuConstants.MinValue) / step;
-
-                if (idx < 0 || idx >= SudokuConstants.BoardSize)
-                    continue;
-
-                if (rowUsed[chosenRow, idx] ||
-                    colUsed[chosenCol, idx] ||
-                    boxUsed[GetBoxIndex(chosenRow, chosenCol), idx])
-                {
-                    continue;
-                }
-
-                // Backup the current state
-                var backupSet = new HashSet<int>(chosenCellOptions);
 
                 board.SetValue(chosenRow, chosenCol, val);
-
                 rowUsed[chosenRow, idx] = true;
                 colUsed[chosenCol, idx] = true;
                 boxUsed[GetBoxIndex(chosenRow, chosenCol), idx] = true;
