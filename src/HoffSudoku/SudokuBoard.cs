@@ -1,6 +1,8 @@
 ﻿using omegaSudoku;
 using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Linq;
 
 namespace HoffSudoku
 {
@@ -111,7 +113,6 @@ namespace HoffSudoku
             return used;
         }
 
-        // New Methods:
         public HashSet<int> GetOptionsInRow(int row)
         {
             var result = new HashSet<int>();
@@ -210,6 +211,35 @@ namespace HoffSudoku
             {
                 board[(row, col)] = new HashSet<int> { value };
             }
+        }
+
+        // Method to return the board as a string
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            int boardSize = SudokuConstants.BoardSize;
+
+            for (int r = 0; r < boardSize; r++)
+            {
+                for (int c = 0; c < boardSize; c++)
+                {
+                    var options = GetOptions(r, c);
+                    if (options.Count == 1)
+                    {
+                        sb.Append(options.First());
+                    }
+                    else
+                    {
+                        sb.Append('0');
+                    }
+                }
+                if (r < boardSize - 1)
+                {
+                    sb.AppendLine(); 
+                }
+            }
+
+            return sb.ToString();
         }
     }
 }
