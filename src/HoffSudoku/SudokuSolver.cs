@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace HoffSudoku
 {
@@ -24,6 +25,14 @@ namespace HoffSudoku
             boxMask = new int[n];
 
             InitializeUsed();
+        }
+
+        private SudokuSolver(SudokuBoard board, int[] rowMask, int[] colMask, int[] boxMask)
+        {
+            this.board = board;
+            this.rowMask = (int[])rowMask.Clone();
+            this.colMask = (int[])colMask.Clone();
+            this.boxMask = (int[])boxMask.Clone();
         }
 
         private void InitializeUsed()
@@ -103,26 +112,24 @@ namespace HoffSudoku
                 for (int c = 0; c < n; c++)
                 {
                     int options = board.GetOptions(r, c);
-                    if (CountBits(options) == 1) continue;
+                    if (CountBits(options) == 1) continue; // Already determined
 
-                    // Count valid options based on masks
-                    List<int> validValues = new List<int>();
-                    for (int i = 0; i < n; i++)
-                    {
-                        if (((options >> i) & 1) == 1 &&
-                            ((rowMask[r] >> i) & 1) == 0 &&
-                            ((colMask[c] >> i) & 1) == 0 &&
-                            ((boxMask[GetBoxIndex(r, c)] >> i) & 1) == 0)
-                        {
-                            validValues.Add(i);
-                        }
-                    }
+                    // Calculate box index once per cell
+                    int boxIndex = GetBoxIndex(r, c);
 
-                    if (validValues.Count == 1)
+                    // Efficiently identify single candidates using bitwise operations
+                    int possibleValues = options & ~(rowMask[r] | colMask[c] | boxMask[boxIndex]);
+
+                    if (CountBits(possibleValues) == 1)
                     {
-                        int val = validValues[0] + minVal;
+                        // Extract the single valid value
+                        int singleBit = possibleValues & -possibleValues; // Isolate the lowest set bit
+                        int valIndex = BitOperations.Log2((uint)singleBit);
+                        int val = valIndex + minVal;
+
+                        // Set the value and update masks
                         board.SetValue(r, c, val);
-                        SetBit(r, c, validValues[0]);
+                        SetBit(r, c, valIndex);
                         changed = true;
                     }
                 }
@@ -392,31 +399,61 @@ namespace HoffSudoku
                     ((boxMask[GetBoxIndex(chosenRow, chosenCol)] >> i) & 1) == 1)
                     continue;
 
+                // Clone the current state before making changes
+                SudokuBoard clonedBoard = board.Clone();
+                int[] clonedRowMask = (int[])rowMask.Clone();
+                int[] clonedColMask = (int[])colMask.Clone();
+                int[] clonedBoxMask = (int[])boxMask.Clone();
+
                 // Assign the value
                 board.SetValue(chosenRow, chosenCol, i + minVal);
                 SetBit(chosenRow, chosenCol, i);
+                ApplyLogicStrategies();
 
                 // Recurse
                 if (Backtrack())
                     return true;
 
-                // Undo the assignment
-                board.SetValue(chosenRow, chosenCol, 0);
-                ClearBit(chosenRow, chosenCol, i);
+                // If recursion failed, restore the previous state
+                RestoreState(clonedBoard, clonedRowMask, clonedColMask, clonedBoxMask);
             }
 
             return false;
         }
 
+        // Helper method to restore the board and masks
+        private void RestoreState(SudokuBoard clonedBoard, int[] clonedRowMask, int[] clonedColMask, int[] clonedBoxMask)
+        {
+            // Restore the board
+            for (int r = 0; r < SudokuConstants.BoardSize; r++)
+            {
+                for (int c = 0; c < SudokuConstants.BoardSize; c++)
+                {
+                    int options = clonedBoard.GetOptions(r, c);
+                    board.SetValue(r, c, GetValueFromOptions(options));
+                }
+            }
+
+            // Restore the masks
+            rowMask = (int[])clonedRowMask.Clone();
+            colMask = (int[])clonedColMask.Clone();
+            boxMask = (int[])clonedBoxMask.Clone();
+        }
+
+        // Helper method to extract value from options bitmask
+        private int GetValueFromOptions(int options)
+        {
+            if (CountBits(options) != 1)
+                return 0;
+
+            int value = (int)(Math.Log(options, 2) + 1) + SudokuConstants.MinValue - 1;
+            return value;
+        }
+
+        // It will use the CPU itself to quickly calculate the number of bits.
         private int CountBits(int n)
         {
-            int count = 0;
-            while (n != 0)
-            {
-                count += n & 1;
-                n >>= 1;
-            }
-            return count;
+            return System.Numerics.BitOperations.PopCount((uint)n);
         }
     }
 }

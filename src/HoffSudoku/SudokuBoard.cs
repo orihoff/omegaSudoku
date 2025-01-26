@@ -14,6 +14,14 @@ namespace HoffSudoku
             boardOptions = new int[size, size];
         }
 
+        // Copy constructor for cloning
+        private SudokuBoard(int[,] options)
+        {
+            int size = SudokuConstants.BoardSize;
+            boardOptions = new int[size, size];
+            Array.Copy(options, boardOptions, options.Length);
+        }
+
         public void Initialize(string input)
         {
             int size = SudokuConstants.BoardSize;
@@ -167,6 +175,12 @@ namespace HoffSudoku
             }
 
             return sb.ToString();
+        }
+
+        // Clone method to create a deep copy of the board
+        public SudokuBoard Clone()
+        {
+            return new SudokuBoard(this.boardOptions);
         }
     }
 }
