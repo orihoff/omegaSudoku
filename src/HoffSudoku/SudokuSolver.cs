@@ -10,6 +10,7 @@ namespace HoffSudoku
         private readonly SudokuBoard board;
 
         // Using int arrays for row, column, and box checks.
+        // Each integer has up to 32 bits, so it's fine for 25x25.
         private int[] rowMask;
         private int[] colMask;
         private int[] boxMask;
@@ -19,6 +20,7 @@ namespace HoffSudoku
             this.board = board;
             int n = SudokuConstants.BoardSize;
 
+            // Allocate masks
             rowMask = new int[n];
             colMask = new int[n];
             boxMask = new int[n];
@@ -32,14 +34,16 @@ namespace HoffSudoku
             int minVal = SudokuConstants.MinValue;
             int step = SudokuConstants.Step;
 
+            // Go through each cell. If it has a single value,
+            // set the correct bit in row/col/box masks.
             for (int r = 0; r < n; r++)
             {
                 for (int c = 0; c < n; c++)
                 {
-                    int options = board.GetOptions(r, c);
-                    if (CountBits(options) == 1)
+                    HashSet<int> opts = board.GetOptions(r, c);
+                    if (opts.Count == 1)
                     {
-                        int val = (int)(Math.Log(options, 2) + 1) + SudokuConstants.MinValue - 1;
+                        int val = opts.First();
                         int bitIndex = (val - minVal) / step;
                         SetBit(r, c, bitIndex);
                     }
@@ -47,12 +51,7 @@ namespace HoffSudoku
             }
         }
 
-        private int GetBoxIndex(int row, int col)
-        {
-            return (row / SudokuConstants.SubgridRows) * SudokuConstants.SubgridCols
-                   + (col / SudokuConstants.SubgridCols);
-        }
-
+        // Helper to turn on the bit for row, col, and box.
         private void SetBit(int row, int col, int bitIndex)
         {
             rowMask[row] |= (1 << bitIndex);
@@ -60,6 +59,7 @@ namespace HoffSudoku
             boxMask[GetBoxIndex(row, col)] |= (1 << bitIndex);
         }
 
+        // Helper to turn off the bit for row, col, and box.
         private void ClearBit(int row, int col, int bitIndex)
         {
             rowMask[row] &= ~(1 << bitIndex);
@@ -67,307 +67,60 @@ namespace HoffSudoku
             boxMask[GetBoxIndex(row, col)] &= ~(1 << bitIndex);
         }
 
+        // Finds which box we're in based on row and col.
+        private int GetBoxIndex(int r, int c)
+        {
+            return (r / SudokuConstants.SubgridRows) * SudokuConstants.SubgridCols
+                   + (c / SudokuConstants.SubgridCols);
+        }
+
         public bool Solve()
         {
-            // Apply logical strategies before backtracking
-            while (ApplyLogicStrategies()) { }
-
-            // Start backtracking
             Stopwatch sw = Stopwatch.StartNew();
             bool solved = Backtrack();
             sw.Stop();
-
             Console.WriteLine($"Time taken to solve: {sw.ElapsedMilliseconds} ms");
             return solved;
-        }
-
-        private bool ApplyLogicStrategies()
-        {
-            bool changed = false;
-
-            changed |= ApplyNakedSingles();
-            changed |= ApplyHiddenSingles();
-
-            return changed;
-        }
-
-        private bool ApplyNakedSingles()
-        {
-            bool changed = false;
-            int n = SudokuConstants.BoardSize;
-            int minVal = SudokuConstants.MinValue;
-            int step = SudokuConstants.Step;
-
-            for (int r = 0; r < n; r++)
-            {
-                for (int c = 0; c < n; c++)
-                {
-                    int options = board.GetOptions(r, c);
-                    if (CountBits(options) == 1) continue;
-
-                    // Count valid options based on masks
-                    List<int> validValues = new List<int>();
-                    for (int i = 0; i < n; i++)
-                    {
-                        if (((options >> i) & 1) == 1 &&
-                            ((rowMask[r] >> i) & 1) == 0 &&
-                            ((colMask[c] >> i) & 1) == 0 &&
-                            ((boxMask[GetBoxIndex(r, c)] >> i) & 1) == 0)
-                        {
-                            validValues.Add(i);
-                        }
-                    }
-
-                    if (validValues.Count == 1)
-                    {
-                        int val = validValues[0] + minVal;
-                        board.SetValue(r, c, val);
-                        SetBit(r, c, validValues[0]);
-                        changed = true;
-                    }
-                }
-            }
-
-            return changed;
-        }
-
-        private bool ApplyHiddenSingles()
-        {
-            bool changed = false;
-            changed |= ApplyHiddenSinglesForRows();
-            changed |= ApplyHiddenSinglesForCols();
-            changed |= ApplyHiddenSinglesForBoxes();
-            return changed;
-        }
-
-        private bool ApplyHiddenSinglesForRows()
-        {
-            bool changed = false;
-            int n = SudokuConstants.BoardSize;
-            int minVal = SudokuConstants.MinValue;
-            int step = SudokuConstants.Step;
-
-            for (int r = 0; r < n; r++)
-            {
-                Dictionary<int, int> valueCount = new Dictionary<int, int>();
-
-                for (int c = 0; c < n; c++)
-                {
-                    int options = board.GetOptions(r, c);
-                    if (CountBits(options) == 1) continue;
-
-                    for (int i = 0; i < n; i++)
-                    {
-                        if (((options >> i) & 1) == 1 &&
-                            ((rowMask[r] >> i) & 1) == 0 &&
-                            ((colMask[c] >> i) & 1) == 0 &&
-                            ((boxMask[GetBoxIndex(r, c)] >> i) & 1) == 0)
-                        {
-                            if (valueCount.ContainsKey(i))
-                                valueCount[i]++;
-                            else
-                                valueCount[i] = 1;
-                        }
-                    }
-                }
-
-                foreach (var kvp in valueCount)
-                {
-                    if (kvp.Value == 1)
-                    {
-                        int val = kvp.Key + minVal;
-                        // Find the cell that can take this value
-                        for (int c = 0; c < n; c++)
-                        {
-                            int options = board.GetOptions(r, c);
-                            if (CountBits(options) == 1) continue;
-
-                            if (((options >> kvp.Key) & 1) == 1 &&
-                                ((rowMask[r] >> kvp.Key) & 1) == 0 &&
-                                ((colMask[c] >> kvp.Key) & 1) == 0 &&
-                                ((boxMask[GetBoxIndex(r, c)] >> kvp.Key) & 1) == 0)
-                            {
-                                board.SetValue(r, c, val);
-                                SetBit(r, c, kvp.Key);
-                                changed = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return changed;
-        }
-
-        private bool ApplyHiddenSinglesForCols()
-        {
-            bool changed = false;
-            int n = SudokuConstants.BoardSize;
-            int minVal = SudokuConstants.MinValue;
-            int step = SudokuConstants.Step;
-
-            for (int c = 0; c < n; c++)
-            {
-                Dictionary<int, int> valueCount = new Dictionary<int, int>();
-
-                for (int r = 0; r < n; r++)
-                {
-                    int options = board.GetOptions(r, c);
-                    if (CountBits(options) == 1) continue;
-
-                    for (int i = 0; i < n; i++)
-                    {
-                        if (((options >> i) & 1) == 1 &&
-                            ((rowMask[r] >> i) & 1) == 0 &&
-                            ((colMask[c] >> i) & 1) == 0 &&
-                            ((boxMask[GetBoxIndex(r, c)] >> i) & 1) == 0)
-                        {
-                            if (valueCount.ContainsKey(i))
-                                valueCount[i]++;
-                            else
-                                valueCount[i] = 1;
-                        }
-                    }
-                }
-
-                foreach (var kvp in valueCount)
-                {
-                    if (kvp.Value == 1)
-                    {
-                        int val = kvp.Key + minVal;
-                        // Find the cell that can take this value
-                        for (int r = 0; r < n; r++)
-                        {
-                            int options = board.GetOptions(r, c);
-                            if (CountBits(options) == 1) continue;
-
-                            if (((options >> kvp.Key) & 1) == 1 &&
-                                ((rowMask[r] >> kvp.Key) & 1) == 0 &&
-                                ((colMask[c] >> kvp.Key) & 1) == 0 &&
-                                ((boxMask[GetBoxIndex(r, c)] >> kvp.Key) & 1) == 0)
-                            {
-                                board.SetValue(r, c, val);
-                                SetBit(r, c, kvp.Key);
-                                changed = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return changed;
-        }
-
-        private bool ApplyHiddenSinglesForBoxes()
-        {
-            bool changed = false;
-            int n = SudokuConstants.BoardSize;
-            int subR = SudokuConstants.SubgridRows;
-            int subC = SudokuConstants.SubgridCols;
-            int minVal = SudokuConstants.MinValue;
-            int step = SudokuConstants.Step;
-
-            for (int br = 0; br < n; br += subR)
-            {
-                for (int bc = 0; bc < n; bc += subC)
-                {
-                    Dictionary<int, int> valueCount = new Dictionary<int, int>();
-
-                    for (int r = 0; r < subR; r++)
-                    {
-                        for (int c = 0; c < subC; c++)
-                        {
-                            int rr = br + r;
-                            int cc = bc + c;
-                            int options = board.GetOptions(rr, cc);
-                            if (CountBits(options) == 1) continue;
-
-                            for (int i = 0; i < n; i++)
-                            {
-                                if (((options >> i) & 1) == 1 &&
-                                    ((rowMask[rr] >> i) & 1) == 0 &&
-                                    ((colMask[cc] >> i) & 1) == 0 &&
-                                    ((boxMask[GetBoxIndex(rr, cc)] >> i) & 1) == 0)
-                                {
-                                    if (valueCount.ContainsKey(i))
-                                        valueCount[i]++;
-                                    else
-                                        valueCount[i] = 1;
-                                }
-                            }
-                        }
-                    }
-
-                    foreach (var kvp in valueCount)
-                    {
-                        if (kvp.Value == 1)
-                        {
-                            int val = kvp.Key + minVal;
-                            // Find the cell that can take this value
-                            for (int r = 0; r < subR; r++)
-                            {
-                                for (int c = 0; c < subC; c++)
-                                {
-                                    int rr = br + r;
-                                    int cc = bc + c;
-                                    int options = board.GetOptions(rr, cc);
-                                    if (CountBits(options) == 1) continue;
-
-                                    if (((options >> kvp.Key) & 1) == 1 &&
-                                        ((rowMask[rr] >> kvp.Key) & 1) == 0 &&
-                                        ((colMask[cc] >> kvp.Key) & 1) == 0 &&
-                                        ((boxMask[GetBoxIndex(rr, cc)] >> kvp.Key) & 1) == 0)
-                                    {
-                                        board.SetValue(rr, cc, val);
-                                        SetBit(rr, cc, kvp.Key);
-                                        changed = true;
-                                        break;
-                                    }
-                                }
-                                if (changed) break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return changed;
         }
 
         private bool Backtrack()
         {
             int n = SudokuConstants.BoardSize;
+
+            // We'll choose the cell with the fewest valid options.
             int minOptionsCount = n + 1;
             int chosenRow = -1;
             int chosenCol = -1;
-            int minVal = SudokuConstants.MinValue;
-            int step = SudokuConstants.Step;
 
-            // Find the cell with the fewest valid options
+            // Find the best cell to branch on.
             for (int r = 0; r < n; r++)
             {
                 for (int c = 0; c < n; c++)
                 {
-                    int options = board.GetOptions(r, c);
-                    if (CountBits(options) == 1) continue;
+                    HashSet<int> opts = board.GetOptions(r, c);
+                    if (opts.Count == 1) continue;
 
+                    // Count how many are actually valid when checking row/col/box
                     int validCount = 0;
-                    for (int i = 0; i < n; i++)
+                    foreach (int val in opts)
                     {
-                        if (((options >> i) & 1) == 1 &&
-                            ((rowMask[r] >> i) & 1) == 0 &&
-                            ((colMask[c] >> i) & 1) == 0 &&
-                            ((boxMask[GetBoxIndex(r, c)] >> i) & 1) == 0)
-                        {
-                            validCount++;
-                        }
+                        int bitIndex = (val - SudokuConstants.MinValue) / SudokuConstants.Step;
+
+                        // If the bit is already set in any mask, skip it
+                        if (((rowMask[r] >> bitIndex) & 1) == 1) continue;
+                        if (((colMask[c] >> bitIndex) & 1) == 1) continue;
+                        if (((boxMask[GetBoxIndex(r, c)] >> bitIndex) & 1) == 1) continue;
+
+                        validCount++;
                     }
 
+                    // If no valid numbers, this path fails.
                     if (validCount == 0)
+                    {
                         return false;
+                    }
 
+                    // Track cell with fewest possibilities.
                     if (validCount < minOptionsCount)
                     {
                         minOptionsCount = validCount;
@@ -377,46 +130,40 @@ namespace HoffSudoku
                 }
             }
 
-            // If no cell is chosen, the puzzle is solved
+            // If chosenRow is still -1, that means everything is single-valued.
+            // We must be solved.
             if (chosenRow == -1 && chosenCol == -1)
-                return true;
-
-            int cellOptions = board.GetOptions(chosenRow, chosenCol);
-            for (int i = 0; i < SudokuConstants.BoardSize; i++)
             {
-                if (((cellOptions >> i) & 1) == 0)
-                    continue;
+                return true;
+            }
 
-                if (((rowMask[chosenRow] >> i) & 1) == 1 ||
-                    ((colMask[chosenCol] >> i) & 1) == 1 ||
-                    ((boxMask[GetBoxIndex(chosenRow, chosenCol)] >> i) & 1) == 1)
-                    continue;
+            // Try each valid possibility.
+            HashSet<int> chosenCellOptions = board.GetOptions(chosenRow, chosenCol);
+            foreach (int val in chosenCellOptions)
+            {
+                int bitIndex = (val - SudokuConstants.MinValue) / SudokuConstants.Step;
 
-                // Assign the value
-                board.SetValue(chosenRow, chosenCol, i + minVal);
-                SetBit(chosenRow, chosenCol, i);
+                // If any mask has this bit set, we can't use it.
+                if (((rowMask[chosenRow] >> bitIndex) & 1) == 1) continue;
+                if (((colMask[chosenCol] >> bitIndex) & 1) == 1) continue;
+                if (((boxMask[GetBoxIndex(chosenRow, chosenCol)] >> bitIndex) & 1) == 1) continue;
+
+                // Temporarily set the value in the board
+                board.SetValue(chosenRow, chosenCol, val);
+                SetBit(chosenRow, chosenCol, bitIndex);
 
                 // Recurse
                 if (Backtrack())
+                {
                     return true;
+                }
 
-                // Undo the assignment
+                // Undo changes if it didn't work
                 board.SetValue(chosenRow, chosenCol, 0);
-                ClearBit(chosenRow, chosenCol, i);
+                ClearBit(chosenRow, chosenCol, bitIndex);
             }
 
             return false;
-        }
-
-        private int CountBits(int n)
-        {
-            int count = 0;
-            while (n != 0)
-            {
-                count += n & 1;
-                n >>= 1;
-            }
-            return count;
         }
     }
 }
