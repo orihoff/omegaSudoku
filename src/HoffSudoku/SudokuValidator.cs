@@ -6,6 +6,7 @@ namespace HoffSudoku
 {
     public static class SudokuValidator
     {
+        
         public static void ValidateInitialBoard(SudokuBoard board)
         {
             int boardSize = SudokuConstants.BoardSize;
@@ -49,56 +50,92 @@ namespace HoffSudoku
 
         private static IEnumerable<int> GetSingleValuesInRow(SudokuBoard board, int row)
         {
-            // Get fixed values in the specified row
-            for (int col = 0; col < SudokuConstants.BoardSize; col++)
+            int boardSize = SudokuConstants.BoardSize;
+            int minValue = SudokuConstants.MinValue;
+            int step = SudokuConstants.Step;
+
+            for (int col = 0; col < boardSize; col++)
             {
-                var options = board.GetOptions(row, col);
-                if (options.Count == 1)
+                int options = board.GetOptions(row, col);
+                if (CountBits(options) == 1)
                 {
-                    yield return options.First();
+                    yield return BitmaskToValue(options, minValue, step);
                 }
             }
         }
 
+       
         private static IEnumerable<int> GetSingleValuesInColumn(SudokuBoard board, int col)
         {
-            // Get fixed values in the specified column
-            for (int row = 0; row < SudokuConstants.BoardSize; row++)
+            int boardSize = SudokuConstants.BoardSize;
+            int minValue = SudokuConstants.MinValue;
+            int step = SudokuConstants.Step;
+
+            for (int row = 0; row < boardSize; row++)
             {
-                var options = board.GetOptions(row, col);
-                if (options.Count == 1)
+                int options = board.GetOptions(row, col);
+                if (CountBits(options) == 1)
                 {
-                    yield return options.First();
+                    yield return BitmaskToValue(options, minValue, step);
                 }
             }
         }
 
+      
         private static IEnumerable<int> GetSingleValuesInBox(SudokuBoard board, int startRow, int startCol)
         {
-            // Get fixed values in the specified box
             int subgridRows = SudokuConstants.SubgridRows;
             int subgridCols = SudokuConstants.SubgridCols;
+            int minValue = SudokuConstants.MinValue;
+            int step = SudokuConstants.Step;
 
             for (int r = 0; r < subgridRows; r++)
             {
                 for (int c = 0; c < subgridCols; c++)
                 {
-                    var options = board.GetOptions(startRow + r, startCol + c);
-                    if (options.Count == 1)
+                    int currentRow = startRow + r;
+                    int currentCol = startCol + c;
+                    int options = board.GetOptions(currentRow, currentCol);
+                    if (CountBits(options) == 1)
                     {
-                        yield return options.First();
+                        yield return BitmaskToValue(options, minValue, step);
                     }
                 }
             }
         }
 
+        
+        private static int BitmaskToValue(int bitmask, int minValue, int step)
+        {
+            // Find the position of the single set bit
+            int position = 0;
+            while (bitmask > 1)
+            {
+                bitmask >>= 1;
+                position++;
+            }
+            return minValue + (position * step);
+        }
+
+        
+        private static int CountBits(int n)
+        {
+            int count = 0;
+            while (n != 0)
+            {
+                count += n & 1;
+                n >>= 1;
+            }
+            return count;
+        }
+
+ 
         private static bool HasDuplicate(IEnumerable<int> values)
         {
-            // Check for duplicate values
-            var set = new HashSet<int>();
+            var seen = new HashSet<int>();
             foreach (var value in values)
             {
-                if (!set.Add(value))
+                if (!seen.Add(value))
                 {
                     return true;
                 }
