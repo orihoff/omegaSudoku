@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq; // Import custom exceptions
+using System.Linq;
 
 namespace HoffSudoku
 {
@@ -10,33 +10,27 @@ namespace HoffSudoku
         {
             int boardSize = SudokuConstants.BoardSize;
 
-            // Check for duplicates in rows
+            // Check rows for duplicates
             for (int row = 0; row < boardSize; row++)
             {
-                var filledValues = board.GetOptionsInRow(row)
-                                        .Where(val => val != 0)
-                                        .ToList();
-
-                if (HasDuplicate(filledValues))
+                var values = GetSingleValuesInRow(board, row);
+                if (HasDuplicate(values))
                 {
                     throw new InvalidBoardException($"Invalid Sudoku: duplicate value found in row {row + 1}");
                 }
             }
 
-            // Check for duplicates in columns
+            // Check columns for duplicates
             for (int col = 0; col < boardSize; col++)
             {
-                var filledValues = board.GetOptionsInColumn(col)
-                                        .Where(val => val != 0)
-                                        .ToList();
-
-                if (HasDuplicate(filledValues))
+                var values = GetSingleValuesInColumn(board, col);
+                if (HasDuplicate(values))
                 {
                     throw new InvalidBoardException($"Invalid Sudoku: duplicate value found in column {col + 1}");
                 }
             }
 
-            // Check for duplicates in boxes
+            // Check boxes for duplicates
             int subgridRows = SudokuConstants.SubgridRows;
             int subgridCols = SudokuConstants.SubgridCols;
 
@@ -44,11 +38,8 @@ namespace HoffSudoku
             {
                 for (int boxCol = 0; boxCol < boardSize; boxCol += subgridCols)
                 {
-                    var filledValues = board.GetOptionsInBox(boxRow, boxCol)
-                                            .Where(val => val != 0)
-                                            .ToList();
-
-                    if (HasDuplicate(filledValues))
+                    var values = GetSingleValuesInBox(board, boxRow, boxCol);
+                    if (HasDuplicate(values))
                     {
                         throw new InvalidBoardException($"Invalid Sudoku: duplicate value found in box starting at ({boxRow + 1}, {boxCol + 1})");
                     }
@@ -56,16 +47,61 @@ namespace HoffSudoku
             }
         }
 
+        private static IEnumerable<int> GetSingleValuesInRow(SudokuBoard board, int row)
+        {
+            // Get fixed values in the specified row
+            for (int col = 0; col < SudokuConstants.BoardSize; col++)
+            {
+                var options = board.GetOptions(row, col);
+                if (options.Count == 1)
+                {
+                    yield return options.First();
+                }
+            }
+        }
+
+        private static IEnumerable<int> GetSingleValuesInColumn(SudokuBoard board, int col)
+        {
+            // Get fixed values in the specified column
+            for (int row = 0; row < SudokuConstants.BoardSize; row++)
+            {
+                var options = board.GetOptions(row, col);
+                if (options.Count == 1)
+                {
+                    yield return options.First();
+                }
+            }
+        }
+
+        private static IEnumerable<int> GetSingleValuesInBox(SudokuBoard board, int startRow, int startCol)
+        {
+            // Get fixed values in the specified box
+            int subgridRows = SudokuConstants.SubgridRows;
+            int subgridCols = SudokuConstants.SubgridCols;
+
+            for (int r = 0; r < subgridRows; r++)
+            {
+                for (int c = 0; c < subgridCols; c++)
+                {
+                    var options = board.GetOptions(startRow + r, startCol + c);
+                    if (options.Count == 1)
+                    {
+                        yield return options.First();
+                    }
+                }
+            }
+        }
+
         private static bool HasDuplicate(IEnumerable<int> values)
         {
+            // Check for duplicate values
             var set = new HashSet<int>();
-            foreach (int val in values)
+            foreach (var value in values)
             {
-                if (set.Contains(val))
+                if (!set.Add(value))
                 {
                     return true;
                 }
-                set.Add(val);
             }
             return false;
         }
