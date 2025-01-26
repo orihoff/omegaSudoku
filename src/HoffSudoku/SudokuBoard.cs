@@ -176,7 +176,7 @@ namespace HoffSudoku
             }
             Console.WriteLine();
 
-            Console.WriteLine("   " + new string('-', boardSize * 4 + subgridCols - 1));
+            Console.WriteLine("    " + new string('-', boardSize * 4 + subgridCols - 1));
 
             for (int r = 0; r < boardSize; r++)
             {
@@ -194,7 +194,7 @@ namespace HoffSudoku
 
                 if ((r + 1) % subgridRows == 0 && r != boardSize - 1)
                 {
-                    Console.Write("   ");
+                    Console.Write("    ");
                     for (int i = 0; i < boardSize; i++)
                     {
                         Console.Write("----");
@@ -205,7 +205,7 @@ namespace HoffSudoku
                 }
             }
 
-            Console.WriteLine("   " + new string('-', boardSize * 4 + subgridCols - 1));
+            Console.WriteLine("    " + new string('-', boardSize * 4 + subgridCols - 1));
         }
 
         public void SetValue(int row, int col, int value)
