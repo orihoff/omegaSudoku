@@ -79,7 +79,7 @@ namespace HoffSudoku
         public bool Solve()
         {
             // Apply logical strategies before backtracking
-            ApplyLogicStrategies();
+            while(ApplyLogicStrategies());
 
             // Start backtracking
             Stopwatch sw = Stopwatch.StartNew();
@@ -420,7 +420,7 @@ namespace HoffSudoku
                 // Assign the value
                 board.SetValue(chosenRow, chosenCol, i + minVal);
                 SetBit(chosenRow, chosenCol, i);
-                ApplyLogicStrategies();
+                while(ApplyLogicStrategies());
 
                 // Recurse
                 if (Backtrack())
