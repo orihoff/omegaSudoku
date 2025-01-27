@@ -6,7 +6,7 @@
         public static int SubgridRows { get; private set; } // Rows in subgrid
         public static int SubgridCols { get; private set; } // Columns in subgrid
         public const int MinValue = 1; // Minimal value
-        public const int Step = 1;    // Step between values
+        public const int Step = 1;    // Step between values, its stil cant be diffrent then 1 but its an intrsting idea
 
         public static void ValidateBoardSizeAndCalculateSubgridDimensions()
         {

@@ -79,7 +79,7 @@ namespace HoffSudoku
         public bool Solve()
         {
             // Apply logical strategies before backtracking
-            while (ApplyLogicStrategies()) { }
+            ApplyLogicStrategies();
 
             // Start backtracking
             Stopwatch sw = Stopwatch.StartNew();
@@ -90,16 +90,19 @@ namespace HoffSudoku
             return solved;
         }
 
-        private bool ApplyLogicStrategies()
+        public bool ApplyLogicStrategies()
         {
             bool changed = false;
 
             changed |= ApplyNakedSingles();
-            changed |= ApplyHiddenSingles();
+
+            if (SudokuConstants.BoardSize > 9)
+            {
+                changed |= ApplyHiddenSingles();
+            }
 
             return changed;
         }
-
         private bool ApplyNakedSingles()
         {
             bool changed = false;

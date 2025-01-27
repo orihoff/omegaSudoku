@@ -98,7 +98,7 @@ namespace HoffSudoku
             Console.WriteLine();
 
             // Print separator
-            Console.WriteLine("   " + new string('-', size * 4 + subCols - 1));
+            Console.WriteLine("    " + new string('-', size * 4 + subCols - 1));
 
             for (int r = 0; r < size; r++)
             {
@@ -116,7 +116,7 @@ namespace HoffSudoku
 
                 if ((r + 1) % subRows == 0 && r != size - 1)
                 {
-                    Console.Write("   ");
+                    Console.Write("    ");
                     for (int i = 0; i < size; i++)
                     {
                         Console.Write("----");
@@ -127,8 +127,9 @@ namespace HoffSudoku
                 }
             }
 
-            Console.WriteLine("   " + new string('-', size * 4 + subCols - 1));
+            Console.WriteLine("    " + new string('-', size * 4 + subCols - 1));
         }
+
 
         private int CountBits(int n)
         {
