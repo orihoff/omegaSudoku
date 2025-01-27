@@ -2,23 +2,24 @@
 {
     public static class SudokuConstants
     {
-        public static int BoardSize { get; set; } = 9; // Default size
-        public static int SubgridRows { get; private set; } // Rows in subgrid
-        public static int SubgridCols { get; private set; } // Columns in subgrid
-        public const int MinValue = 1; // Minimal value
-        public const int Step = 1;    // Step between values, its stil cant be diffrent then 1 but its an intrsting idea
+        public static int BoardSize { get; private set; } = 0; 
+        public static int SubgridRows { get; private set; }
+        public static int SubgridCols { get; private set; }
+        public const int MinValue = 1;
+        public const int Step = 1;
 
-        public static void ValidateBoardSizeAndCalculateSubgridDimensions()
+        public static void SetBoardSize(int size)
         {
-            double sqrt = Math.Sqrt(BoardSize);
+            double sqrt = Math.Sqrt(size);
 
-            if (sqrt % 1 != 0) // Check if sqrt is not an integer
+            if (sqrt % 1 != 0)
             {
-                throw new Exception(
-                    $"Invalid board size: {BoardSize}x{BoardSize}. Board size must have an integer square root."
+                throw new InvalidInputException(
+                    $"Invalid board size: {size}x{size}. Board size must have an integer square root."
                 );
             }
 
+            BoardSize = size;
             SubgridRows = SubgridCols = (int)sqrt;
         }
     }

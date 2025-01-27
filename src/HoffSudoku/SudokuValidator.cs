@@ -6,7 +6,6 @@ namespace HoffSudoku
 {
     public static class SudokuValidator
     {
-        
         public static void ValidateInitialBoard(SudokuBoard board)
         {
             int boardSize = SudokuConstants.BoardSize;
@@ -64,7 +63,6 @@ namespace HoffSudoku
             }
         }
 
-       
         private static IEnumerable<int> GetSingleValuesInColumn(SudokuBoard board, int col)
         {
             int boardSize = SudokuConstants.BoardSize;
@@ -81,7 +79,6 @@ namespace HoffSudoku
             }
         }
 
-      
         private static IEnumerable<int> GetSingleValuesInBox(SudokuBoard board, int startRow, int startCol)
         {
             int subgridRows = SudokuConstants.SubgridRows;
@@ -104,7 +101,6 @@ namespace HoffSudoku
             }
         }
 
-        
         private static int BitmaskToValue(int bitmask, int minValue, int step)
         {
             // Find the position of the single set bit
@@ -117,7 +113,6 @@ namespace HoffSudoku
             return minValue + (position * step);
         }
 
-        
         private static int CountBits(int n)
         {
             int count = 0;
@@ -129,7 +124,6 @@ namespace HoffSudoku
             return count;
         }
 
- 
         private static bool HasDuplicate(IEnumerable<int> values)
         {
             var seen = new HashSet<int>();

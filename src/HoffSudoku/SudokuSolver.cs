@@ -84,11 +84,12 @@ namespace HoffSudoku
 
         public bool Solve()
         {
-            // Apply logical strategies before backtracking
-            while(ApplyLogicStrategies());
+            
 
             // Start backtracking
             Stopwatch sw = Stopwatch.StartNew();
+            // Apply logical strategies before backtracking
+            while (ApplyLogicStrategies()) ;
             bool solved = Backtrack();
             sw.Stop();
 
@@ -121,7 +122,7 @@ namespace HoffSudoku
                 for (int c = 0; c < n; c++)
                 {
                     int options = board.GetOptions(r, c);
-                    if (CountBits(options) == 1) continue; // Already determined
+                    if (CountBits(options) == 1) continue;
 
                     // Calculate box index once per cell
                     int boxIndex = GetBoxIndex(r, c);

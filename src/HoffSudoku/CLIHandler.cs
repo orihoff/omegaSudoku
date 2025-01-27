@@ -7,30 +7,12 @@ namespace HoffSudoku
 {
     public class CLIHandler
     {
-        private readonly SudokuBoard board;
-        private string? originalFilePath; 
+        private SudokuBoard? board; 
+        private string? originalFilePath;
 
         public CLIHandler()
         {
-            ValidateAndSetDefaultBoardSize();
-            board = new SudokuBoard();
-        }
-
-        private void ValidateAndSetDefaultBoardSize()
-        {
-            try
-            {
-                // Validate the board size
-                SudokuConstants.ValidateBoardSizeAndCalculateSubgridDimensions();
-            }
-            catch (Exception)
-            {
-                // If board size is invalid, reset to default (9x9) and notify the user
-                Console.WriteLine($"Invalid board size: {SudokuConstants.BoardSize}x{SudokuConstants.BoardSize}. " +
-                                  "Board size must have an integer square root. Defaulting to 9x9.");
-                SudokuConstants.BoardSize = 9;
-                SudokuConstants.ValidateBoardSizeAndCalculateSubgridDimensions();
-            }
+            
         }
 
         public void Run()
@@ -76,7 +58,17 @@ namespace HoffSudoku
 
                 try
                 {
-                    // Initialize the board
+                    int inputLength = input.Replace("\n", "").Replace("\r", "").Length; 
+                    double sqrt = Math.Sqrt(inputLength);
+                    if (sqrt % 1 != 0)
+                    {
+                        throw new InvalidInputException($"Input length {inputLength} is not a perfect square.");
+                    }
+                    int size = (int)sqrt;
+
+                    SudokuConstants.SetBoardSize(size); 
+
+                    board = new SudokuBoard();
                     board.Initialize(input);
 
                     Console.WriteLine("Initial board:");
@@ -98,7 +90,7 @@ namespace HoffSudoku
                         if (choice == "2")
                         {
                             // Get the solved board as text using ToString
-                            string solvedBoard = board.ToString(); 
+                            string solvedBoard = board.ToString();
                             SaveSolvedBoardToFile(solvedBoard);
                         }
                     }
@@ -148,8 +140,7 @@ namespace HoffSudoku
 
                 try
                 {
-                    // Validate the input format here, if needed
-                    InputValidator.Validate(input); 
+                    // לא צריך לבדוק את פורמט הקלט כאן, כי נבצע זאת אחרי קביעת BoardSize
                     return input;
                 }
                 catch (InvalidInputException ex)
@@ -186,9 +177,8 @@ namespace HoffSudoku
 
                 try
                 {
-                    string input = File.ReadAllText(filePath);
-                    // Validate the input format
-                    InputValidator.Validate(input); 
+                    string input = File.ReadAllText(filePath).Replace("\n", "").Replace("\r", "");
+                    // לא צריך לבדוק את פורמט הקלט כאן, כי נבצע זאת אחרי קביעת BoardSize
                     originalFilePath = filePath; // Save the file path for possible overwriting
                     return input;
                 }

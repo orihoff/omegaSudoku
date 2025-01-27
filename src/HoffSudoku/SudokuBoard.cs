@@ -10,6 +10,9 @@ namespace HoffSudoku
 
         public SudokuBoard()
         {
+            if (SudokuConstants.BoardSize <= 0)
+                throw new InitializationException("Board size must be set before initializing the SudokuBoard.");
+
             int size = SudokuConstants.BoardSize;
             boardOptions = new int[size, size];
         }
@@ -17,6 +20,9 @@ namespace HoffSudoku
         // Copy constructor for cloning
         private SudokuBoard(int[,] options)
         {
+            if (SudokuConstants.BoardSize <= 0)
+                throw new InitializationException("Board size must be set before cloning the SudokuBoard.");
+
             int size = SudokuConstants.BoardSize;
             boardOptions = new int[size, size];
             Array.Copy(options, boardOptions, options.Length);
@@ -87,7 +93,7 @@ namespace HoffSudoku
             int subRows = SudokuConstants.SubgridRows;
             int subCols = SudokuConstants.SubgridCols;
 
-            // Print column headers
+            // הדפסת כותרות העמודות
             Console.Write("    ");
             for (int c = 0; c < size; c++)
             {
@@ -97,12 +103,11 @@ namespace HoffSudoku
             }
             Console.WriteLine();
 
-            // Print top border
+            // הדפסת מפריד
             Console.WriteLine("    " + new string('-', size * 4 + subCols - 1));
 
             for (int r = 0; r < size; r++)
             {
-                // Print row headers
                 Console.Write($"{r + 1,2} |");
                 for (int c = 0; c < size; c++)
                 {
@@ -115,7 +120,6 @@ namespace HoffSudoku
                 }
                 Console.WriteLine();
 
-                // Print grid lines between subgrids
                 if ((r + 1) % subRows == 0 && r != size - 1)
                 {
                     Console.Write("    ");
@@ -129,13 +133,11 @@ namespace HoffSudoku
                 }
             }
 
-            // Print bottom border
             Console.WriteLine("    " + new string('-', size * 4 + subCols - 1));
         }
 
         private int CountBits(int n)
         {
-            // Count the number of 1s in the binary representation of n
             int count = 0;
             while (n != 0)
             {
@@ -150,7 +152,7 @@ namespace HoffSudoku
             if (bitmask == 0)
                 return ".";
 
-            // Calculate numeric value from bitmask
+            // חישוב הערך המספרי מתוך הביטמאסק
             int value = (int)(Math.Log(bitmask, 2) + 1) + SudokuConstants.MinValue - 1;
 
             if (value <= 9)
@@ -159,14 +161,16 @@ namespace HoffSudoku
             }
             else
             {
-                // Convert value to ASCII character after 9 (e.g., 10 → ':')
+                // המרת הערך לתו ASCII המתאים אחרי 9 (לדוגמה, 10 → ':')
                 return ((char)('0' + value)).ToString();
             }
         }
 
-
         public override string ToString()
         {
+            if (SudokuConstants.BoardSize <= 0)
+                throw new InitializationException("Board size must be set before converting SudokuBoard to string.");
+
             StringBuilder sb = new StringBuilder();
             int size = SudokuConstants.BoardSize;
 
@@ -192,7 +196,6 @@ namespace HoffSudoku
 
             return sb.ToString();
         }
-
 
         // Clone method to create a deep copy of the board
         public SudokuBoard Clone()
