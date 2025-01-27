@@ -14,6 +14,7 @@ namespace HoffSudoku
         private int[] rowMask;
         private int[] colMask;
         private int[] boxMask;
+        private string puzzle;
 
         public SudokuSolver(SudokuBoard board)
         {
@@ -33,6 +34,11 @@ namespace HoffSudoku
             this.rowMask = (int[])rowMask.Clone();
             this.colMask = (int[])colMask.Clone();
             this.boxMask = (int[])boxMask.Clone();
+        }
+
+        public SudokuSolver(string puzzle)
+        {
+            this.puzzle = puzzle;
         }
 
         private void InitializeUsed()
@@ -420,7 +426,7 @@ namespace HoffSudoku
                 // Assign the value
                 board.SetValue(chosenRow, chosenCol, i + minVal);
                 SetBit(chosenRow, chosenCol, i);
-                while(ApplyLogicStrategies());
+                ApplyLogicStrategies();
 
                 // Recurse
                 if (Backtrack())
