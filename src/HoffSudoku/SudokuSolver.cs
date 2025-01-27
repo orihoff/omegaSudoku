@@ -349,37 +349,43 @@ namespace HoffSudoku
             int minOptionsCount = n + 1;
             int chosenRow = -1;
             int chosenCol = -1;
+            int highestDegree = -1;
             int minVal = SudokuConstants.MinValue;
             int step = SudokuConstants.Step;
 
-            // Find the cell with the fewest valid options
+            // Find the cell with the fewest valid options and highest degree
             for (int r = 0; r < n; r++)
             {
                 for (int c = 0; c < n; c++)
                 {
                     int options = board.GetOptions(r, c);
-                    if (CountBits(options) == 1) continue;
+                    if (CountBits(options) == 1) continue; // Skip already determined cells
 
-                    int validCount = 0;
-                    for (int i = 0; i < n; i++)
-                    {
-                        if (((options >> i) & 1) == 1 &&
-                            ((rowMask[r] >> i) & 1) == 0 &&
-                            ((colMask[c] >> i) & 1) == 0 &&
-                            ((boxMask[GetBoxIndex(r, c)] >> i) & 1) == 0)
-                        {
-                            validCount++;
-                        }
-                    }
+                    // Calculate valid candidates by excluding used numbers
+                    int validCandidates = options & ~(rowMask[r] | colMask[c] | boxMask[GetBoxIndex(r, c)]);
+
+                    int validCount = CountBits(validCandidates);
 
                     if (validCount == 0)
-                        return false;
+                        return false; // Dead end
 
                     if (validCount < minOptionsCount)
                     {
                         minOptionsCount = validCount;
                         chosenRow = r;
                         chosenCol = c;
+                        highestDegree = CalculateDegree(r, c);
+                    }
+                    else if (validCount == minOptionsCount)
+                    {
+                        // Apply Degree Heuristic
+                        int currentDegree = CalculateDegree(r, c);
+                        if (currentDegree > highestDegree)
+                        {
+                            chosenRow = r;
+                            chosenCol = c;
+                            highestDegree = currentDegree;
+                        }
                     }
                 }
             }
@@ -389,6 +395,9 @@ namespace HoffSudoku
                 return true;
 
             int cellOptions = board.GetOptions(chosenRow, chosenCol);
+            int boxIndexChosen = GetBoxIndex(chosenRow, chosenCol);
+
+            // Iterate through possible candidates
             for (int i = 0; i < SudokuConstants.BoardSize; i++)
             {
                 if (((cellOptions >> i) & 1) == 0)
@@ -396,7 +405,7 @@ namespace HoffSudoku
 
                 if (((rowMask[chosenRow] >> i) & 1) == 1 ||
                     ((colMask[chosenCol] >> i) & 1) == 1 ||
-                    ((boxMask[GetBoxIndex(chosenRow, chosenCol)] >> i) & 1) == 1)
+                    ((boxMask[boxIndexChosen] >> i) & 1) == 1)
                     continue;
 
                 // Clone the current state before making changes
@@ -419,6 +428,45 @@ namespace HoffSudoku
             }
 
             return false;
+        }
+
+        // Helper method to calculate the degree of a cell
+        private int CalculateDegree(int row, int col)
+        {
+            int degree = 0;
+            int n = SudokuConstants.BoardSize;
+
+            // Count the number of empty cells in the same row
+            for (int c = 0; c < n; c++)
+            {
+                if (c != col && CountBits(board.GetOptions(row, c)) > 1)
+                    degree++;
+            }
+
+            // Count the number of empty cells in the same column
+            for (int r = 0; r < n; r++)
+            {
+                if (r != row && CountBits(board.GetOptions(r, col)) > 1)
+                    degree++;
+            }
+
+            // Count the number of empty cells in the same box
+            int boxIndex = GetBoxIndex(row, col);
+            int subR = SudokuConstants.SubgridRows;
+            int subC = SudokuConstants.SubgridCols;
+            int startRow = (row / subR) * subR;
+            int startCol = (col / subC) * subC;
+
+            for (int r = startRow; r < startRow + subR; r++)
+            {
+                for (int c = startCol; c < startCol + subC; c++)
+                {
+                    if ((r != row || c != col) && CountBits(board.GetOptions(r, c)) > 1)
+                        degree++;
+                }
+            }
+
+            return degree;
         }
 
         // Helper method to restore the board and masks
@@ -453,7 +501,7 @@ namespace HoffSudoku
         // It will use the CPU itself to quickly calculate the number of bits.
         private int CountBits(int n)
         {
-            return System.Numerics.BitOperations.PopCount((uint)n);
+            return BitOperations.PopCount((uint)n);
         }
     }
 }
