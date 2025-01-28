@@ -1,8 +1,10 @@
-﻿using omegaSudoku;
-using System;
+﻿using System;
 using System.Text;
+using HoffSudoku.Validators;
+using HoffSudoku.Exceptions;
 
-namespace HoffSudoku
+
+namespace HoffSudoku.Models
 {
     public class SudokuBoard
     {
@@ -93,7 +95,7 @@ namespace HoffSudoku
             int subRows = SudokuConstants.SubgridRows;
             int subCols = SudokuConstants.SubgridCols;
 
-            // הדפסת כותרות העמודות
+
             Console.Write("    ");
             for (int c = 0; c < size; c++)
             {
@@ -103,7 +105,7 @@ namespace HoffSudoku
             }
             Console.WriteLine();
 
-            // הדפסת מפריד
+
             Console.WriteLine("    " + new string('-', size * 4 + subCols - 1));
 
             for (int r = 0; r < size; r++)
@@ -152,7 +154,7 @@ namespace HoffSudoku
             if (bitmask == 0)
                 return ".";
 
-            // חישוב הערך המספרי מתוך הביטמאסק
+
             int value = (int)(Math.Log(bitmask, 2) + 1) + SudokuConstants.MinValue - 1;
 
             if (value <= 9)
@@ -161,7 +163,7 @@ namespace HoffSudoku
             }
             else
             {
-                // המרת הערך לתו ASCII המתאים אחרי 9 (לדוגמה, 10 → ':')
+
                 return ((char)('0' + value)).ToString();
             }
         }

@@ -1,8 +1,11 @@
-﻿namespace HoffSudoku
+﻿using System;
+using HoffSudoku.Exceptions;
+
+namespace HoffSudoku.Models
 {
     public static class SudokuConstants
     {
-        public static int BoardSize { get; private set; } = 0; 
+        public static int BoardSize { get; private set; } = 0;
         public static int SubgridRows { get; private set; }
         public static int SubgridCols { get; private set; }
         public const int MinValue = 1;

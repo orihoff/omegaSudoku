@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HoffSudoku.Models;
+using HoffSudoku.Exceptions;
 
-namespace HoffSudoku
+namespace HoffSudoku.Validators
 {
     public static class SudokuValidator
     {

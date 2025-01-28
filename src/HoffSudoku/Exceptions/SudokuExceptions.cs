@@ -1,4 +1,6 @@
-﻿namespace HoffSudoku
+﻿using System;
+
+namespace HoffSudoku.Exceptions
 {
     // Base class for all custom Sudoku exceptions
     public class SudokuException : Exception

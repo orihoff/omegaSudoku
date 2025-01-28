@@ -1,7 +1,8 @@
-﻿using HoffSudoku;
+﻿using HoffSudoku.Exceptions;
+using HoffSudoku.Models;
 using System;
 
-namespace omegaSudoku
+namespace HoffSudoku.Validators
 {
     public static class InputValidator
     {

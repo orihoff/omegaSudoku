@@ -1,6 +1,7 @@
-﻿using HoffSudoku;
+﻿using System;
+using HoffSudoku.Handlers;
 
-namespace omegaSudoku
+namespace HoffSudoku
 {
     public class Program
     {
