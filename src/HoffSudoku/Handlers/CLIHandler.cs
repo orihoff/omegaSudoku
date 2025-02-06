@@ -16,35 +16,39 @@ namespace HoffSudoku.Handlers
         {
             fileHandler = new FileHandler();
 
-            // Set up Ctrl+C (CancelKeyPress) handler
+            // Handle Ctrl+C (CancelKeyPress) to prevent accidental termination
             Console.CancelKeyPress += (sender, e) =>
             {
-                Console.WriteLine("\nCtrl+C detected. Exiting gracefully...");
-                e.Cancel = true;
+                Console.WriteLine("\nCtrl+C detected. Almost got me, but not this time...");
+                e.Cancel = true; // Prevents immediate program exit
                 Environment.Exit(0);
             };
 
+            // Ensure proper character encoding for display
             Console.OutputEncoding = System.Text.Encoding.UTF8;
         }
 
+        /// <summary>
+        /// Runs the CLI Sudoku solver, displaying the menu and handling user input.
+        /// </summary>
         public void Run()
         {
             Console.Clear();
-            PrintBanner(); 
-            PrintWelcomeMessage();
+            PrintBanner(); // Display the Sudoku solver title
+            PrintWelcomeMessage(); // Show initial instructions
 
             while (true)
             {
                 try
                 {
-                    PrintMenuOptions(); 
+                    PrintMenuOptions(); // Show the menu options
 
-                    string? choice = Console.ReadLine()?.Trim().ToLower();
+                    string? choice = Console.ReadLine()?.Trim().ToLower(); // Read user input
 
-                    if (choice == "exit")
+                    if (choice == "exit") // Exit condition
                         break;
 
-                    if (choice != "1" && choice != "2")
+                    if (choice != "1" && choice != "2") // Invalid input handling
                     {
                         ShowErrorMessage("Invalid choice. Please enter '1', '2', or 'exit'.");
                         PauseBeforeContinuing();
@@ -54,6 +58,7 @@ namespace HoffSudoku.Handlers
                     string? input = null;
                     try
                     {
+                        // Get the puzzle either from console input or a file
                         input = choice switch
                         {
                             "1" => GetPuzzleFromConsole(),
@@ -68,7 +73,7 @@ namespace HoffSudoku.Handlers
                         continue;
                     }
 
-                    if (input == null)
+                    if (input == null) // If the user chooses to go back to the menu
                     {
                         PauseBeforeContinuing();
                         continue;
@@ -76,6 +81,7 @@ namespace HoffSudoku.Handlers
 
                     try
                     {
+                        // Verify if input length forms a perfect square (valid Sudoku grid)
                         int inputLength = input.Replace("\n", "").Replace("\r", "").Length;
                         double sqrt = Math.Sqrt(inputLength);
                         if (sqrt % 1 != 0)
@@ -84,16 +90,26 @@ namespace HoffSudoku.Handlers
                         }
                         int size = (int)sqrt;
 
+                        // Enforce maximum board size limit (25x25)
+                        if (size > 25)
+                        {
+                            throw new InvalidInputException($"The maximum allowed board size is 25x25. Your board is {size}x{size}.");
+                        }
+
+                        // Set board size dynamically
                         SudokuConstants.SetBoardSize(size);
 
+                        // Initialize and display the board
                         board = new SudokuBoard();
                         board.Initialize(input);
 
                         PrintSectionHeader("Initial Board");
                         board.Print();
 
+                        // Validate if the board follows Sudoku rules
                         SudokuValidator.ValidateInitialBoard(board);
 
+                        // Attempt to solve the Sudoku puzzle
                         SudokuSolver solver = new SudokuSolver(board);
                         bool success = solver.Solve();
 
@@ -102,6 +118,7 @@ namespace HoffSudoku.Handlers
                             PrintSectionHeader("Solved Board");
                             board.Print();
 
+                            // Save solved puzzle to file if it was loaded from a file
                             if (choice == "2")
                             {
                                 string solvedBoard = board.ToString();
@@ -133,7 +150,7 @@ namespace HoffSudoku.Handlers
                         ShowErrorMessage($"Unexpected error: {ex.Message}");
                     }
 
-                    PauseBeforeContinuing();
+                    PauseBeforeContinuing(); // Wait before restarting menu loop
                 }
                 catch (OperationCanceledException)
                 {
@@ -148,6 +165,9 @@ namespace HoffSudoku.Handlers
             }
         }
 
+        /// <summary>
+        /// Gets a Sudoku puzzle input from the user via console.
+        /// </summary>
         private string? GetPuzzleFromConsole()
         {
             while (true)
@@ -164,7 +184,7 @@ namespace HoffSudoku.Handlers
                         continue;
                     }
 
-                    if (input.ToLower() == "menu")
+                    if (input.ToLower() == "menu") // Allow user to return to main menu
                     {
                         return null;
                     }
@@ -179,6 +199,9 @@ namespace HoffSudoku.Handlers
             }
         }
 
+        /// <summary>
+        /// Prints the ASCII banner with the Sudoku solver title.
+        /// </summary>
         private void PrintBanner()
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -191,18 +214,23 @@ namespace HoffSudoku.Handlers
             Console.WriteLine("                  By Ori Hoffnung                    ");
             Console.ResetColor();
             Console.WriteLine("----------------------------------------------------------------");
-
         }
 
+        /// <summary>
+        /// Displays a welcome message to the user.
+        /// </summary>
         private void PrintWelcomeMessage()
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\nWelcome to the Sudoku solver!");
+            Console.WriteLine("\nWelcome to the Sudoku Solver!");
             Console.WriteLine("You can enter a puzzle manually or load one from a file.");
             Console.ResetColor();
             Console.WriteLine("\n----------------------------------------------------------------");
         }
 
+        /// <summary>
+        /// Displays the main menu options.
+        /// </summary>
         private void PrintMenuOptions()
         {
             Console.WriteLine("\n Please choose an option:");
@@ -215,6 +243,9 @@ namespace HoffSudoku.Handlers
             Console.Write("Your choice: ");
         }
 
+        /// <summary>
+        /// Prints a section header with a given title.
+        /// </summary>
         private void PrintSectionHeader(string title)
         {
             Console.ForegroundColor = ConsoleColor.Green;
@@ -222,6 +253,9 @@ namespace HoffSudoku.Handlers
             Console.ResetColor();
         }
 
+        /// <summary>
+        /// Displays an error message in red.
+        /// </summary>
         private void ShowErrorMessage(string message)
         {
             Console.ForegroundColor = ConsoleColor.Red;
@@ -229,6 +263,9 @@ namespace HoffSudoku.Handlers
             Console.ResetColor();
         }
 
+        /// <summary>
+        /// Pauses execution until the user presses Enter.
+        /// </summary>
         private void PauseBeforeContinuing()
         {
             Console.WriteLine("\nPress Enter to continue...");

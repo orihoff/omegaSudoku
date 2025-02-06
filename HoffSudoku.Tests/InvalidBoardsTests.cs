@@ -96,13 +96,13 @@ namespace HoffSudoku.Tests.Validation
 
         /* Test for a board that contains duplicate digits in a column.
            Here, the first column in the first two rows both contain '1'.
-           The board is 9x9 (81 characters), and ValidateInitialBoard should throw an InvalidBoardException.
+           The ValidateInitialBoard should throw an InvalidBoardException.
         */
         [TestMethod]
         public void DuplicateInColumnTest()
         {
             // Arrange: Create a board string for a 9x9 board.
-            // For example, let row1 and row2 begin with "1", and the rest are zeros.
+            //  row1 and row2 begin with "1", and the rest are zeros.
             string row1 = "100000000";
             string row2 = "100000000";
             string otherRows = new string('0', 63); // 7 rows * 9 characters = 63 characters

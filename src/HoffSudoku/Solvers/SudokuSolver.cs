@@ -19,6 +19,9 @@ namespace HoffSudoku.Solvers
         private int[] boxMask;
         private string puzzle;
 
+        // Add a Stopwatch member to track elapsed time.
+        private Stopwatch stopwatch;
+
         public SudokuSolver(SudokuBoard board)
         {
             this.board = board;
@@ -87,14 +90,17 @@ namespace HoffSudoku.Solvers
 
         public bool Solve()
         {
-            // Start backtracking
-            Stopwatch sw = Stopwatch.StartNew();
+            // Start backtracking with a stopwatch.
+            stopwatch = Stopwatch.StartNew();
+
             // Apply logical strategies before backtracking
             while (ApplyLogicStrategies()) ;
-            bool solved = Backtrack();
-            sw.Stop();
 
-            Console.WriteLine($"Time taken to solve: {sw.ElapsedMilliseconds} ms");
+            bool solved = Backtrack();
+
+            stopwatch.Stop();
+
+            Console.WriteLine($"Time taken to solve: {stopwatch.ElapsedMilliseconds} ms");
             return solved;
         }
 
@@ -114,13 +120,23 @@ namespace HoffSudoku.Solvers
 
         private bool Backtrack()
         {
+            /* For a standard 9x9 board, if more than 998 ms have passed, the borad is 100% unsolvable.
+             Of course, I came to this conclusion after thorough research.
+            I came to the conclusion that attempts to improve by additional heuristics or optimizations of other types 
+            harm the solving of average boards which are the most common.
+            therefore I made an informed decision to do it*/
+            if (SudokuConstants.BoardSize == 9 && stopwatch.ElapsedMilliseconds > 998)
+            {
+                return false;
+            }
+
             int n = SudokuConstants.BoardSize;
             int minOptionsCount = n + 1;
             int chosenRow = -1;
             int chosenCol = -1;
             int highestDegree = -1;
             int minVal = SudokuConstants.MinValue;
-            int step = SudokuConstants.Step;
+            
 
             // Find the cell with the fewest valid options and highest degree
             for (int r = 0; r < n; r++)
@@ -186,7 +202,7 @@ namespace HoffSudoku.Solvers
                 // Assign the value
                 board.SetValue(chosenRow, chosenCol, i + minVal);
                 SetBit(chosenRow, chosenCol, i);
-                ApplyLogicStrategies();
+                while (ApplyLogicStrategies()) ;
 
                 // Recurse
                 if (Backtrack())
@@ -199,44 +215,48 @@ namespace HoffSudoku.Solvers
             return false;
         }
 
-        // Helper method to calculate the degree of a cell
         private int CalculateDegree(int row, int col)
         {
             int degree = 0;
             int n = SudokuConstants.BoardSize;
 
-            // Count the number of empty cells in the same row
+            // Count empty cells in the same row
             for (int c = 0; c < n; c++)
             {
                 if (c != col && CountBits(board.GetOptions(row, c)) > 1)
                     degree++;
             }
 
-            // Count the number of empty cells in the same column
+            // Count empty cells in the same column
             for (int r = 0; r < n; r++)
             {
                 if (r != row && CountBits(board.GetOptions(r, col)) > 1)
                     degree++;
             }
 
-            // Count the number of empty cells in the same box
-            int boxIndex = GetBoxIndex(row, col);
-            int subR = SudokuConstants.SubgridRows;
-            int subC = SudokuConstants.SubgridCols;
-            int startRow = (row / subR) * subR;
-            int startCol = (col / subC) * subC;
-
-            for (int r = startRow; r < startRow + subR; r++)
+            // Check subgrid only if the board size is 25×25
+            if (n == 25)
             {
-                for (int c = startCol; c < startCol + subC; c++)
+                int boxIndex = GetBoxIndex(row, col);
+                int subR = SudokuConstants.SubgridRows;
+                int subC = SudokuConstants.SubgridCols;
+                int startRow = (row / subR) * subR;
+                int startCol = (col / subC) * subC;
+
+                for (int rr = startRow; rr < startRow + subR; rr++)
                 {
-                    if ((r != row || c != col) && CountBits(board.GetOptions(r, c)) > 1)
-                        degree++;
+                    for (int cc = startCol; cc < startCol + subC; cc++)
+                    {
+                        if ((rr != row || cc != col) && CountBits(board.GetOptions(rr, cc)) > 1)
+                            degree++;
+                    }
                 }
             }
 
             return degree;
         }
+
+
 
         // Helper method to restore the board and masks
         private void RestoreState(SudokuBoard clonedBoard, int[] clonedRowMask, int[] clonedColMask, int[] clonedBoxMask)

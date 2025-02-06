@@ -8,11 +8,15 @@ namespace HoffSudoku.Validators
 {
     public static class SudokuValidator
     {
+        /// <summary>
+        /// Validates the initial Sudoku board by checking for duplicate values
+        /// in rows, columns, and boxes. Throws an exception if invalid.
+        /// </summary>
         public static void ValidateInitialBoard(SudokuBoard board)
         {
             int boardSize = SudokuConstants.BoardSize;
 
-            // Check rows for duplicates
+            // Check each row for duplicate values
             for (int row = 0; row < boardSize; row++)
             {
                 var values = GetSingleValuesInRow(board, row);
@@ -22,7 +26,7 @@ namespace HoffSudoku.Validators
                 }
             }
 
-            // Check columns for duplicates
+            // Check each column for duplicate values
             for (int col = 0; col < boardSize; col++)
             {
                 var values = GetSingleValuesInColumn(board, col);
@@ -32,7 +36,7 @@ namespace HoffSudoku.Validators
                 }
             }
 
-            // Check boxes for duplicates
+            // Check each subgrid (box) for duplicate values
             int subgridRows = SudokuConstants.SubgridRows;
             int subgridCols = SudokuConstants.SubgridCols;
 
@@ -49,6 +53,9 @@ namespace HoffSudoku.Validators
             }
         }
 
+        /// <summary>
+        /// Retrieves all fixed values in the specified row.
+        /// </summary>
         private static IEnumerable<int> GetSingleValuesInRow(SudokuBoard board, int row)
         {
             int boardSize = SudokuConstants.BoardSize;
@@ -58,13 +65,16 @@ namespace HoffSudoku.Validators
             for (int col = 0; col < boardSize; col++)
             {
                 int options = board.GetOptions(row, col);
-                if (CountBits(options) == 1)
+                if (CountBits(options) == 1) // Only return cells with a single possible value
                 {
                     yield return BitmaskToValue(options, minValue, step);
                 }
             }
         }
 
+        /// <summary>
+        /// Retrieves all fixed values in the specified column.
+        /// </summary>
         private static IEnumerable<int> GetSingleValuesInColumn(SudokuBoard board, int col)
         {
             int boardSize = SudokuConstants.BoardSize;
@@ -74,13 +84,16 @@ namespace HoffSudoku.Validators
             for (int row = 0; row < boardSize; row++)
             {
                 int options = board.GetOptions(row, col);
-                if (CountBits(options) == 1)
+                if (CountBits(options) == 1) // Only return cells with a single possible value
                 {
                     yield return BitmaskToValue(options, minValue, step);
                 }
             }
         }
 
+        /// <summary>
+        /// Retrieves all fixed values in the specified subgrid (box).
+        /// </summary>
         private static IEnumerable<int> GetSingleValuesInBox(SudokuBoard board, int startRow, int startCol)
         {
             int subgridRows = SudokuConstants.SubgridRows;
@@ -95,7 +108,7 @@ namespace HoffSudoku.Validators
                     int currentRow = startRow + r;
                     int currentCol = startCol + c;
                     int options = board.GetOptions(currentRow, currentCol);
-                    if (CountBits(options) == 1)
+                    if (CountBits(options) == 1) // Only return cells with a single possible value
                     {
                         yield return BitmaskToValue(options, minValue, step);
                     }
@@ -103,11 +116,13 @@ namespace HoffSudoku.Validators
             }
         }
 
+        /// <summary>
+        /// Converts a bitmask representation to its corresponding Sudoku value.
+        /// </summary>
         private static int BitmaskToValue(int bitmask, int minValue, int step)
         {
-            // Find the position of the single set bit
             int position = 0;
-            while (bitmask > 1)
+            while (bitmask > 1) // Find the index of the set bit
             {
                 bitmask >>= 1;
                 position++;
@@ -115,6 +130,9 @@ namespace HoffSudoku.Validators
             return minValue + (position * step);
         }
 
+        /// <summary>
+        /// Counts the number of set bits in an integer (that is the number of possible values in a cell).
+        /// </summary>
         private static int CountBits(int n)
         {
             int count = 0;
@@ -126,12 +144,16 @@ namespace HoffSudoku.Validators
             return count;
         }
 
+        /// <summary>
+        /// Checks if a collection contains duplicate values.
+        /// Returns true if a duplicate is found.
+        /// </summary>
         private static bool HasDuplicate(IEnumerable<int> values)
         {
             var seen = new HashSet<int>();
             foreach (var value in values)
             {
-                if (!seen.Add(value))
+                if (!seen.Add(value)) // If value is already in the set, it's a duplicate
                 {
                     return true;
                 }

@@ -6,167 +6,95 @@ namespace HoffSudoku.Handlers
 {
     public class FileHandler
     {
+        /// <summary>
+        /// Prompts the user for a file path and loads a Sudoku puzzle from the specified file.
+        /// If the user types 'menu', the function returns to the main menu.
+        /// </summary>
         public string? GetPuzzleFromFile(ref string? originalFilePath)
         {
             while (true)
             {
-                Console.WriteLine("Enter the file path to load the puzzle or type 'menu' to return to main menu:");
-                string? filePath = Console.ReadLine()?.Trim();
-
-                if (string.IsNullOrEmpty(filePath))
-                {
-                    Console.WriteLine("File path cannot be empty.");
-                    continue;
-                }
-
-                if (filePath.ToLower() == "menu")
-                {
-                    return null;
-                }
-
-                if (!File.Exists(filePath))
-                {
-                    Console.WriteLine("File not found. Please ensure the path is correct.");
-                    continue;
-                }
-
                 try
                 {
-                    string input = File.ReadAllText(filePath).Replace("\n", "").Replace("\r", "");
-                    originalFilePath = filePath;
-                    return input;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error reading the file: {ex.Message}");
-                }
-            }
-        }
+                    Console.WriteLine("Enter the file path to load the puzzle or type 'menu' to return to the main menu:");
+                    string? filePath = Console.ReadLine()?.Trim();
 
-        public void SaveSolvedBoardToFile(string solvedBoard, string? originalFilePath)
-        {
-            while (true)
-            {
-                Console.WriteLine("Do you want to save the solved board to a new file or overwrite the original file? (Enter 'new', 'overwrite', or 'menu' to return to main menu)");
-                string? choice = Console.ReadLine()?.Trim().ToLower();
-
-                if (choice == "menu")
-                {
-                    return;
-                }
-
-                string filePath;
-
-                if (choice == "overwrite")
-                {
-                    if (string.IsNullOrEmpty(originalFilePath))
+                    // Ensure the file path is not empty.
+                    if (string.IsNullOrEmpty(filePath))
                     {
-                        filePath = PromptForOriginalFilePath();
-                        if (filePath == null)
-                            return;
+                        Console.WriteLine("File path cannot be empty.");
+                        continue;
                     }
-                    else
-                    {
-                        filePath = originalFilePath;
-                    }
-                }
-                else if (choice == "new")
-                {
-                    filePath = GetNewFilePath();
-                    if (filePath == null)
-                        return;
-                }
-                else
-                {
-                    Console.WriteLine("Invalid choice. Please enter 'new', 'overwrite', or 'menu'.");
-                    continue;
-                }
 
-                try
-                {
-                    File.WriteAllText(filePath, solvedBoard);
-                    Console.WriteLine($"Solved board saved to: {filePath}");
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to save the file: {ex.Message}");
-                }
-            }
-        }
-
-        private string? PromptForOriginalFilePath()
-        {
-            while (true)
-            {
-                Console.WriteLine("Original file path is not available. Please enter the original file path to overwrite or type 'menu' to return to main menu:");
-                string? pathInput = Console.ReadLine()?.Trim();
-
-                if (string.IsNullOrEmpty(pathInput))
-                {
-                    Console.WriteLine("File path cannot be empty.");
-                    continue;
-                }
-
-                if (pathInput.ToLower() == "menu")
-                {
-                    return null;
-                }
-
-                if (!File.Exists(pathInput))
-                {
-                    Console.WriteLine("Original file not found for overwriting.");
-                    continue;
-                }
-
-                return pathInput;
-            }
-        }
-
-        private string? GetNewFilePath()
-        {
-            while (true)
-            {
-                Console.WriteLine("Enter the path for the new file or type 'menu' to return to main menu:");
-                string? newFilePath = Console.ReadLine()?.Trim();
-
-                if (string.IsNullOrEmpty(newFilePath))
-                {
-                    Console.WriteLine("File path cannot be empty.");
-                    continue;
-                }
-
-                if (newFilePath.ToLower() == "menu")
-                {
-                    return null;
-                }
-
-                if (File.Exists(newFilePath))
-                {
-                    Console.WriteLine("File already exists. Do you want to overwrite it? (yes/no or type 'menu' to return to main menu):");
-                    string? overwriteChoice = Console.ReadLine()?.Trim().ToLower();
-
-                    if (overwriteChoice == "menu")
+                    // Return to the menu if requested.
+                    if (filePath.ToLower() == "menu")
                     {
                         return null;
                     }
 
-                    if (overwriteChoice == "yes")
+                    // Validate the file existence.
+                    if (!File.Exists(filePath))
                     {
-                        return newFilePath;
-                    }
-                    else if (overwriteChoice == "no")
-                    {
+                        Console.WriteLine("File not found. Please ensure the path is correct.");
                         continue;
                     }
-                    else
-                    {
-                        Console.WriteLine("Invalid choice. Please enter 'yes', 'no', or 'menu'.");
-                        continue;
-                    }
-                }
 
-                return newFilePath;
+                    // Read the file content and return it.
+                    string input = File.ReadAllText(filePath);
+                    originalFilePath = filePath;
+                    return input;
+                }
+                // Handle specific exceptions with meaningful messages.
+                catch (UnauthorizedAccessException)
+                {
+                    Console.WriteLine("Access to the file is denied. Please check file permissions.");
+                }
+                catch (FileNotFoundException)
+                {
+                    Console.WriteLine("The specified file was not found. Please verify the file path.");
+                }
+                catch (IOException ex)
+                {
+                    Console.WriteLine($"An error occurred while accessing the file: {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Unexpected error: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Saves the solved Sudoku board back to the original file.
+        /// If the original file path is unavailable, an error message is displayed.
+        /// </summary>
+        public void SaveSolvedBoardToFile(string solvedBoard, string? originalFilePath)
+        {
+            // Ensure the original file path is available before attempting to save.
+            if (string.IsNullOrEmpty(originalFilePath))
+            {
+                Console.WriteLine("Error: Original file path is not available. Cannot save the solved board.");
+                return;
+            }
+
+            try
+            {
+                // Write the solved board to the original file.
+                File.WriteAllText(originalFilePath, solvedBoard);
+                Console.WriteLine($"Solved board saved to: {originalFilePath}");
+            }
+            // Handle possible file write errors.
+            catch (UnauthorizedAccessException)
+            {
+                Console.WriteLine("Access to the file is denied. Please check file permissions.");
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"An error occurred while saving the file: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
             }
         }
     }

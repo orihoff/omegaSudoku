@@ -3,13 +3,16 @@ using System.Text;
 using HoffSudoku.Validators;
 using HoffSudoku.Exceptions;
 
-
 namespace HoffSudoku.Models
 {
     public class SudokuBoard
     {
         private readonly int[,] boardOptions;
 
+        /// <summary>
+        /// Initializes an empty Sudoku board with the predefined board size.
+        /// Throws an exception if the board size is not set.
+        /// </summary>
         public SudokuBoard()
         {
             if (SudokuConstants.BoardSize <= 0)
@@ -19,7 +22,9 @@ namespace HoffSudoku.Models
             boardOptions = new int[size, size];
         }
 
-        // Copy constructor for cloning
+        /// <summary>
+        /// Creates a deep copy of the Sudoku board.
+        /// </summary>
         private SudokuBoard(int[,] options)
         {
             if (SudokuConstants.BoardSize <= 0)
@@ -30,6 +35,9 @@ namespace HoffSudoku.Models
             Array.Copy(options, boardOptions, options.Length);
         }
 
+        /// <summary>
+        /// Initializes the board with a given input string, setting values or possible options.
+        /// </summary>
         public void Initialize(string input)
         {
             int size = SudokuConstants.BoardSize;
@@ -57,6 +65,9 @@ namespace HoffSudoku.Models
             }
         }
 
+        /// <summary>
+        /// Creates a bitmask representing all possible values for a cell.
+        /// </summary>
         private int CreateBitmask(int minValue, int size, int step)
         {
             int mask = 0;
@@ -67,11 +78,17 @@ namespace HoffSudoku.Models
             return mask;
         }
 
+        /// <summary>
+        /// Returns the bitmask options for a specific cell.
+        /// </summary>
         public int GetOptions(int row, int col)
         {
             return boardOptions[row, col];
         }
 
+        /// <summary>
+        /// Sets a value in the board, updating the bitmask accordingly.
+        /// </summary>
         public void SetValue(int row, int col, int value)
         {
             if (value == 0)
@@ -84,17 +101,22 @@ namespace HoffSudoku.Models
             }
         }
 
+        /// <summary>
+        /// Clears the options for a specific cell, setting it to 0.
+        /// </summary>
         public void ClearOptions(int row, int col)
         {
             boardOptions[row, col] = 0;
         }
 
+        /// <summary>
+        /// Prints the Sudoku board in a readable format with grid separators.
+        /// </summary>
         public void Print()
         {
             int size = SudokuConstants.BoardSize;
             int subRows = SudokuConstants.SubgridRows;
             int subCols = SudokuConstants.SubgridCols;
-
 
             Console.Write("    ");
             for (int c = 0; c < size; c++)
@@ -104,7 +126,6 @@ namespace HoffSudoku.Models
                     Console.Write(" ");
             }
             Console.WriteLine();
-
 
             Console.WriteLine("    " + new string('-', size * 4 + subCols - 1));
 
@@ -138,6 +159,9 @@ namespace HoffSudoku.Models
             Console.WriteLine("    " + new string('-', size * 4 + subCols - 1));
         }
 
+        /// <summary>
+        /// Counts the number of bits set to 1 in an integer (used for checking possible values).
+        /// </summary>
         private int CountBits(int n)
         {
             int count = 0;
@@ -149,11 +173,13 @@ namespace HoffSudoku.Models
             return count;
         }
 
+        /// <summary>
+        /// Converts a bitmask into a displayable Sudoku number.
+        /// </summary>
         private string GetDisplayValue(int bitmask)
         {
             if (bitmask == 0)
                 return ".";
-
 
             int value = (int)(Math.Log(bitmask, 2) + 1) + SudokuConstants.MinValue - 1;
 
@@ -163,11 +189,13 @@ namespace HoffSudoku.Models
             }
             else
             {
-
                 return ((char)('0' + value)).ToString();
             }
         }
 
+        /// <summary>
+        /// Converts the Sudoku board into a string representation.
+        /// </summary>
         public override string ToString()
         {
             if (SudokuConstants.BoardSize <= 0)
@@ -190,19 +218,18 @@ namespace HoffSudoku.Models
                         sb.Append('0');
                     }
                 }
-                if (r < size - 1)
-                {
-                    sb.AppendLine();
-                }
             }
 
             return sb.ToString();
         }
 
-        // Clone method to create a deep copy of the board
+        /// <summary>
+        /// Creates a deep copy of the current Sudoku board.
+        /// </summary>
         public SudokuBoard Clone()
         {
             return new SudokuBoard(this.boardOptions);
         }
+
     }
 }

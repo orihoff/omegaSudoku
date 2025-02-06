@@ -4,6 +4,12 @@ using System;
 
 namespace HoffSudoku.Validators
 {
+    /// <summary>
+    /// Validates the input string for a Sudoku board.
+    /// Ensures the input is not null or empty, has the correct length,
+    /// and contains only valid characters (digits within the allowed range or '0' for empty cells).
+    /// Throws an InvalidInputException if validation fails.
+    /// </summary>
     public static class InputValidator
     {
         public static void Validate(string input)

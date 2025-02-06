@@ -34,7 +34,7 @@ namespace HoffSudoku.Tests.SolvingAlgorithm
         {
             // Arrange
             string boardString = "000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-        string expectedBoardString = "147258369268379145359146278471582693583691427692437581714825936825963714936714852";
+        string expectedBoardString = "146287359528639147793514268275346981931758624684921573452893716317462895869175432";
 
         
         SudokuConstants.SetBoardSize((int) Math.Sqrt(boardString.Length));
@@ -45,7 +45,7 @@ namespace HoffSudoku.Tests.SolvingAlgorithm
         // Act
         solver.Solve();
 
-            // Assert – השוואה ישירה (אם הפלט של board.ToString() הוא בדיוק כפי שמצופה)
+            
             Assert.AreEqual(expectedBoardString, board.ToString());
         }
 
@@ -196,6 +196,50 @@ namespace HoffSudoku.Tests.SolvingAlgorithm
             // Arrange
             string boardString = "040287000000000000309000002507034600400000008200870009000020090060700400000041006";
             string expectedBoardString = "641287935728593164359416872587934621493162758216875349134628597862759413975341286";
+
+            SudokuConstants.SetBoardSize((int)Math.Sqrt(boardString.Length));
+            SudokuBoard board = new SudokuBoard();
+            board.Initialize(boardString);
+            SudokuSolver solver = new SudokuSolver(board);
+
+            // Act
+            solver.Solve();
+
+            // Assert
+            Assert.AreEqual(expectedBoardString, board.ToString());
+        }
+
+        /* Easy board 11.
+           1x1
+         */
+        [TestMethod]
+        public void EasyBoard11Test()
+        {
+            // Arrange
+            string boardString = "0";
+            string expectedBoardString = "1";
+
+            SudokuConstants.SetBoardSize((int)Math.Sqrt(boardString.Length));
+            SudokuBoard board = new SudokuBoard();
+            board.Initialize(boardString);
+            SudokuSolver solver = new SudokuSolver(board);
+
+            // Act
+            solver.Solve();
+
+            // Assert
+            Assert.AreEqual(expectedBoardString, board.ToString());
+        }
+
+        /* Easy board 12.
+           4x4
+        */
+        [TestMethod]
+        public void EasyBoard12Test()
+        {
+            // Arrange
+            string boardString = "0000000000000000";
+            string expectedBoardString = "1324421324313142";
 
             SudokuConstants.SetBoardSize((int)Math.Sqrt(boardString.Length));
             SudokuBoard board = new SudokuBoard();

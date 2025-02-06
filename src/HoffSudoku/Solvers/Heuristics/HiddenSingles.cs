@@ -6,8 +6,14 @@ using HoffSudoku.Exceptions;
 
 namespace HoffSudoku.Solvers.Heuristics
 {
+    /// <summary>
+    /// Applies the Hidden Singles strategy to the Sudoku board.
+    /// </summary>
     public static class HiddenSingles
     {
+        /// <summary>
+        /// Applies Hidden Singles for rows, columns, and boxes.
+        /// </summary>
         public static bool ApplyHiddenSingles(SudokuBoard board, int[] rowMask, int[] colMask, int[] boxMask)
         {
             bool changed = false;
@@ -17,6 +23,9 @@ namespace HoffSudoku.Solvers.Heuristics
             return changed;
         }
 
+        /// <summary>
+        /// Applies Hidden Singles for each row.
+        /// </summary>
         private static bool ApplyHiddenSinglesForRows(SudokuBoard board, int[] rowMask, int[] colMask, int[] boxMask)
         {
             bool changed = false;
@@ -53,7 +62,7 @@ namespace HoffSudoku.Solvers.Heuristics
                     if (kvp.Value == 1)
                     {
                         int val = kvp.Key + minVal;
-                        // Find the cell that can take this value
+                        // Find the cell that can take this value.
                         for (int c = 0; c < n; c++)
                         {
                             int options = board.GetOptions(r, c);
@@ -77,6 +86,9 @@ namespace HoffSudoku.Solvers.Heuristics
             return changed;
         }
 
+        /// <summary>
+        /// Applies Hidden Singles for each column.
+        /// </summary>
         private static bool ApplyHiddenSinglesForCols(SudokuBoard board, int[] rowMask, int[] colMask, int[] boxMask)
         {
             bool changed = false;
@@ -113,7 +125,7 @@ namespace HoffSudoku.Solvers.Heuristics
                     if (kvp.Value == 1)
                     {
                         int val = kvp.Key + minVal;
-                        // Find the cell that can take this value
+                        // Find the cell that can take this value.
                         for (int r = 0; r < n; r++)
                         {
                             int options = board.GetOptions(r, c);
@@ -137,6 +149,9 @@ namespace HoffSudoku.Solvers.Heuristics
             return changed;
         }
 
+        /// <summary>
+        /// Applies Hidden Singles for each box (subgrid).
+        /// </summary>
         private static bool ApplyHiddenSinglesForBoxes(SudokuBoard board, int[] rowMask, int[] colMask, int[] boxMask)
         {
             bool changed = false;
@@ -182,7 +197,7 @@ namespace HoffSudoku.Solvers.Heuristics
                         if (kvp.Value == 1)
                         {
                             int val = kvp.Key + minVal;
-                            // Find the cell that can take this value
+                            // Find the cell that can take this value.
                             for (int r = 0; r < subR; r++)
                             {
                                 for (int c = 0; c < subC; c++)
@@ -213,12 +228,16 @@ namespace HoffSudoku.Solvers.Heuristics
             return changed;
         }
 
+        /// <summary>
+        /// Returns the box index based on the row and column.
+        /// </summary>
         private static int GetBoxIndex(int row, int col)
         {
             return (row / SudokuConstants.SubgridRows) * SudokuConstants.SubgridCols
                    + (col / SudokuConstants.SubgridCols);
         }
 
+        /// <summary>Updates the masks to mark that the value is set in the cell.</summary>
         private static void SetBit(int row, int col, int bitIndex, int[] rowMask, int[] colMask, int[] boxMask, int boxIndex)
         {
             rowMask[row] |= (1 << bitIndex);
@@ -226,7 +245,7 @@ namespace HoffSudoku.Solvers.Heuristics
             boxMask[boxIndex] |= (1 << bitIndex);
         }
 
-        // It will use the CPU itself to quickly calculate the number of bits.
+        /// <summary>Counts the number of active bits in the given number.</summary>
         private static int CountBits(int n)
         {
             return BitOperations.PopCount((uint)n);
