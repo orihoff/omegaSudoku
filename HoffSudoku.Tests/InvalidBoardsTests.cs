@@ -73,5 +73,53 @@ namespace HoffSudoku.Tests.Validation
         }
 
 
+        [TestMethod]
+        public void DuplicateInRowTest()
+        {
+            // Arrange: Create a board string for a 9x9 board.
+            // The first row contains "155000000" (two '5's), followed by eight rows of zeros.
+            string row1 = "155000000"; // duplicate '5' in the first row
+            string otherRows = new string('0', 72); // 8 rows * 9 characters = 72 characters
+            string boardString = row1 + otherRows;
+
+            // Set board size for 9x9.
+            SudokuConstants.SetBoardSize((int)Math.Sqrt(boardString.Length));
+            SudokuBoard board = new SudokuBoard();
+            board.Initialize(boardString);
+
+            // Act & Assert:
+            // ValidateInitialBoard should throw an InvalidBoardException due to the duplicate in a row.
+            Assert.ThrowsException<InvalidBoardException>(() =>
+                SudokuValidator.ValidateInitialBoard(board)
+            );
+        }
+
+        /* Test for a board that contains duplicate digits in a column.
+           Here, the first column in the first two rows both contain '1'.
+           The board is 9x9 (81 characters), and ValidateInitialBoard should throw an InvalidBoardException.
+        */
+        [TestMethod]
+        public void DuplicateInColumnTest()
+        {
+            // Arrange: Create a board string for a 9x9 board.
+            // For example, let row1 and row2 begin with "1", and the rest are zeros.
+            string row1 = "100000000";
+            string row2 = "100000000";
+            string otherRows = new string('0', 63); // 7 rows * 9 characters = 63 characters
+            string boardString = row1 + row2 + otherRows;
+
+            // Set board size for 9x9.
+            SudokuConstants.SetBoardSize((int)Math.Sqrt(boardString.Length));
+            SudokuBoard board = new SudokuBoard();
+            board.Initialize(boardString);
+
+            // Act & Assert:
+            // ValidateInitialBoard should throw an InvalidBoardException because there is a duplicate '1' in column 1.
+            Assert.ThrowsException<InvalidBoardException>(() =>
+                SudokuValidator.ValidateInitialBoard(board)
+            );
+        }
+
+
     }
 }
