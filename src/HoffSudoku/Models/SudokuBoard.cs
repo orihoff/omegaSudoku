@@ -2,6 +2,7 @@
 using System.Text;
 using HoffSudoku.Validators;
 using HoffSudoku.Exceptions;
+using HoffSudoku.Helpers;  // שימוש בפונקציות המשותפות
 
 namespace HoffSudoku.Models
 {
@@ -135,7 +136,7 @@ namespace HoffSudoku.Models
                 for (int c = 0; c < size; c++)
                 {
                     int options = boardOptions[r, c];
-                    string display = (CountBits(options) == 1) ? GetDisplayValue(options) : ".";
+                    string display = (SudokuHelper.CountBits(options) == 1) ? GetDisplayValue(options) : ".";
                     Console.Write($"{display,3} ");
 
                     if ((c + 1) % subCols == 0 && c != size - 1)
@@ -157,20 +158,6 @@ namespace HoffSudoku.Models
             }
 
             Console.WriteLine("    " + new string('-', size * 4 + subCols - 1));
-        }
-
-        /// <summary>
-        /// Counts the number of bits set to 1 in an integer (used for checking possible values).
-        /// </summary>
-        private int CountBits(int n)
-        {
-            int count = 0;
-            while (n != 0)
-            {
-                count += n & 1;
-                n >>= 1;
-            }
-            return count;
         }
 
         /// <summary>
@@ -209,7 +196,7 @@ namespace HoffSudoku.Models
                 for (int c = 0; c < size; c++)
                 {
                     int options = boardOptions[r, c];
-                    if (CountBits(options) == 1)
+                    if (SudokuHelper.CountBits(options) == 1)
                     {
                         sb.Append(GetDisplayValue(options));
                     }
@@ -230,6 +217,5 @@ namespace HoffSudoku.Models
         {
             return new SudokuBoard(this.boardOptions);
         }
-
     }
 }
