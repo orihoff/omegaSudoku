@@ -9,107 +9,138 @@ using HoffSudoku.Solvers.Heuristics;
 
 namespace HoffSudoku.Solvers
 {
+    /// <summary>
+    /// A Sudoku solver that uses heroics and backtracking.
+    /// </summary>
     public class SudokuSolver
     {
         private readonly SudokuBoard board;
-
-        // Using int arrays for row, column, and box checks.
         private int[] rowMask;
         private int[] colMask;
         private int[] boxMask;
         private string puzzle;
-
-        // Add a Stopwatch member to track elapsed time.
         private Stopwatch stopwatch;
 
+        /// <summary>
+        /// Initializes a new instance of the SudokuSolver class with a given board.
+        /// </summary>
         public SudokuSolver(SudokuBoard board)
         {
             this.board = board;
             int n = SudokuConstants.BoardSize;
 
+            // Initialize masks for rows, columns, and boxes.
             rowMask = new int[n];
             colMask = new int[n];
             boxMask = new int[n];
 
-            InitializeUsed();
+            InitializeUsed(); // Set up initial mask state based on given board.
         }
 
+        /// <summary>
+        /// Initializes a new instance of the SudokuSolver class with a board and precomputed masks.
+        /// </summary>
         private SudokuSolver(SudokuBoard board, int[] rowMask, int[] colMask, int[] boxMask)
         {
             this.board = board;
+            // Clone the mask arrays to preserve state.
             this.rowMask = (int[])rowMask.Clone();
             this.colMask = (int[])colMask.Clone();
             this.boxMask = (int[])boxMask.Clone();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the SudokuSolver class using a puzzle string.
+        /// </summary>
         public SudokuSolver(string puzzle)
         {
             this.puzzle = puzzle;
         }
 
+        /// <summary>
+        /// Initializes the board's used values and updates the masks.
+        /// </summary>
         private void InitializeUsed()
         {
             int n = SudokuConstants.BoardSize;
             int minVal = SudokuConstants.MinValue;
             int step = SudokuConstants.Step;
 
+            // Loop through each cell on the board.
             for (int r = 0; r < n; r++)
             {
                 for (int c = 0; c < n; c++)
                 {
                     int options = board.GetOptions(r, c);
+                    // Check if the cell has a determined value.
                     if (CountBits(options) == 1)
                     {
+                        // Calculate the value's bit index.
                         int val = (int)(Math.Log(options, 2) + 1) + SudokuConstants.MinValue - 1;
                         int bitIndex = (val - minVal) / step;
-                        SetBit(r, c, bitIndex);
+                        SetBit(r, c, bitIndex); // Update masks for the cell.
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// Gets the index of the subgrid based on the cell's row and column.
+        /// </summary>
         private int GetBoxIndex(int row, int col)
         {
+            // Calculate subgrid index using division.
             return (row / SudokuConstants.SubgridRows) * SudokuConstants.SubgridCols
                    + (col / SudokuConstants.SubgridCols);
         }
 
+        /// <summary>
+        /// Sets a bit in the corresponding row, column, and box masks.
+        /// </summary>
         private void SetBit(int row, int col, int bitIndex)
         {
-            rowMask[row] |= (1 << bitIndex);
-            colMask[col] |= (1 << bitIndex);
-            boxMask[GetBoxIndex(row, col)] |= (1 << bitIndex);
+            rowMask[row] |= (1 << bitIndex); // Mark the number as used in this row.
+            colMask[col] |= (1 << bitIndex);   // Mark the number as used in this column.
+            boxMask[GetBoxIndex(row, col)] |= (1 << bitIndex); // Mark the number in the subgrid.
         }
 
+        /// <summary>
+        /// Clears a bit in the corresponding row, column, and box masks.
+        /// </summary>
         private void ClearBit(int row, int col, int bitIndex)
         {
-            rowMask[row] &= ~(1 << bitIndex);
-            colMask[col] &= ~(1 << bitIndex);
-            boxMask[GetBoxIndex(row, col)] &= ~(1 << bitIndex);
+            rowMask[row] &= ~(1 << bitIndex); // Remove the number from the row mask.
+            colMask[col] &= ~(1 << bitIndex);   // Remove the number from the column mask.
+            boxMask[GetBoxIndex(row, col)] &= ~(1 << bitIndex); // Remove the number from the box mask.
         }
 
+        /// <summary>
+        /// Attempts to solve the Sudoku puzzle using logical strategies and backtracking.
+        /// </summary>
         public bool Solve()
         {
-            // Start backtracking with a stopwatch.
-            stopwatch = Stopwatch.StartNew();
+            stopwatch = Stopwatch.StartNew(); // Start timing.
 
-            // Apply logical strategies before backtracking
-            while (ApplyLogicStrategies()) ;
+            while (ApplyLogicStrategies()) ; // Apply logic repeatedly until no changes.
 
-            bool solved = Backtrack();
+            bool solved = Backtrack(); // Begin backtracking.
 
             stopwatch.Stop();
-
             Console.WriteLine($"Time taken to solve: {stopwatch.ElapsedMilliseconds} ms");
             return solved;
         }
 
+        /// <summary>
+        /// Applies logical solving strategies NakedSingles and HiddenSingles.
+        /// </summary>
         public bool ApplyLogicStrategies()
         {
             bool changed = false;
 
+            // apply Naked Singles herostic.
             changed |= NakedSingles.ApplyNakedSingles(board, rowMask, colMask, boxMask);
 
+            // Only for larger boards try Hidden Singles.
             if (SudokuConstants.BoardSize > 9)
             {
                 changed |= HiddenSingles.ApplyHiddenSingles(board, rowMask, colMask, boxMask);
@@ -118,17 +149,14 @@ namespace HoffSudoku.Solvers
             return changed;
         }
 
+        /// <summary>
+        /// Uses backtracking to search for a solution to the Sudoku puzzle.
+        /// </summary>
         private bool Backtrack()
         {
-            /* For a standard 9x9 board, if more than 998 ms have passed, the borad is 100% unsolvable.
-             Of course, I came to this conclusion after thorough research.
-            I came to the conclusion that attempts to improve by additional heuristics or optimizations of other types 
-            harm the solving of average boards which are the most common.
-            therefore I made an informed decision to do it*/
-            if (SudokuConstants.BoardSize == 9 && stopwatch.ElapsedMilliseconds > 998)
-            {
+            // Check Hall condition before proceeding.
+            if (!HallConditionValidator.ValidateHallCondition(board, rowMask, colMask, boxMask))
                 return false;
-            }
 
             int n = SudokuConstants.BoardSize;
             int minOptionsCount = n + 1;
@@ -136,24 +164,23 @@ namespace HoffSudoku.Solvers
             int chosenCol = -1;
             int highestDegree = -1;
             int minVal = SudokuConstants.MinValue;
-            
 
-            // Find the cell with the fewest valid options and highest degree
+            // Find the cell with the fewest valid candidates.
             for (int r = 0; r < n; r++)
             {
                 for (int c = 0; c < n; c++)
                 {
                     int options = board.GetOptions(r, c);
-                    if (CountBits(options) == 1) continue; // Skip already determined cells
+                    if (CountBits(options) == 1)
+                        continue; // Skip solved cells.
 
-                    // Calculate valid candidates by excluding used numbers
                     int validCandidates = options & ~(rowMask[r] | colMask[c] | boxMask[GetBoxIndex(r, c)]);
-
                     int validCount = CountBits(validCandidates);
 
                     if (validCount == 0)
-                        return false; // Dead end
+                        return false; // Dead end: no candidates.
 
+                    // Choose the cell with minimal candidates and highest degree.
                     if (validCount < minOptionsCount)
                     {
                         minOptionsCount = validCount;
@@ -163,7 +190,6 @@ namespace HoffSudoku.Solvers
                     }
                     else if (validCount == minOptionsCount)
                     {
-                        // Apply Degree Heuristic
                         int currentDegree = CalculateDegree(r, c);
                         if (currentDegree > highestDegree)
                         {
@@ -175,69 +201,70 @@ namespace HoffSudoku.Solvers
                 }
             }
 
-            // If no cell is chosen, the puzzle is solved
+            // If no cell is selected, the puzzle is solved.
             if (chosenRow == -1 && chosenCol == -1)
                 return true;
 
             int cellOptions = board.GetOptions(chosenRow, chosenCol);
             int boxIndexChosen = GetBoxIndex(chosenRow, chosenCol);
 
-            // Iterate through possible candidates
+            // Try each candidate for the chosen cell.
             for (int i = 0; i < SudokuConstants.BoardSize; i++)
             {
                 if (((cellOptions >> i) & 1) == 0)
-                    continue;
+                    continue; // Candidate not available.
 
+                // Skip candidate if already used in row, column, or box.
                 if (((rowMask[chosenRow] >> i) & 1) == 1 ||
                     ((colMask[chosenCol] >> i) & 1) == 1 ||
                     ((boxMask[boxIndexChosen] >> i) & 1) == 1)
                     continue;
 
-                // Clone the current state before making changes
+                // Clone the current state for backtracking.
                 SudokuBoard clonedBoard = board.Clone();
                 int[] clonedRowMask = (int[])rowMask.Clone();
                 int[] clonedColMask = (int[])colMask.Clone();
                 int[] clonedBoxMask = (int[])boxMask.Clone();
 
-                // Assign the value
-                board.SetValue(chosenRow, chosenCol, i + minVal);
-                SetBit(chosenRow, chosenCol, i);
-                while (ApplyLogicStrategies()) ;
+                board.SetValue(chosenRow, chosenCol, i + minVal); // Place candidate.
+                SetBit(chosenRow, chosenCol, i); // Update masks.
+                while (ApplyLogicStrategies()) ; // Apply logic after assignment.
 
-                // Recurse
                 if (Backtrack())
-                    return true;
+                    return true; // Solution found.
 
-                // If recursion failed, restore the previous state
+                // Restore previous state if candidate fails.
                 RestoreState(clonedBoard, clonedRowMask, clonedColMask, clonedBoxMask);
             }
 
-            return false;
+            return false; // No candidate led to a solution.
         }
 
+        /// <summary>
+        /// Calculates the degree of a cell based on the number of unsolved neighboring cells.
+        /// </summary>
         private int CalculateDegree(int row, int col)
         {
             int degree = 0;
             int n = SudokuConstants.BoardSize;
 
-            // Count empty cells in the same row
+            // Count unsolved cells in the same row.
             for (int c = 0; c < n; c++)
             {
                 if (c != col && CountBits(board.GetOptions(row, c)) > 1)
                     degree++;
             }
 
-            // Count empty cells in the same column
+            // Count unsolved cells in the same column.
             for (int r = 0; r < n; r++)
             {
                 if (r != row && CountBits(board.GetOptions(r, col)) > 1)
                     degree++;
             }
 
-            // Check subgrid only if the board size is 25×25
+            // For 25x25 boards, also check the subgrid.
             if (n == 25)
             {
-                int boxIndex = GetBoxIndex(row, col);
                 int subR = SudokuConstants.SubgridRows;
                 int subC = SudokuConstants.SubgridCols;
                 int startRow = (row / subR) * subR;
@@ -256,12 +283,12 @@ namespace HoffSudoku.Solvers
             return degree;
         }
 
-
-
-        // Helper method to restore the board and masks
+        /// <summary>
+        /// Restores the board and masks from previously cloned states.
+        /// </summary>
         private void RestoreState(SudokuBoard clonedBoard, int[] clonedRowMask, int[] clonedColMask, int[] clonedBoxMask)
         {
-            // Restore the board
+            // Restore board values from the clone.
             for (int r = 0; r < SudokuConstants.BoardSize; r++)
             {
                 for (int c = 0; c < SudokuConstants.BoardSize; c++)
@@ -271,15 +298,18 @@ namespace HoffSudoku.Solvers
                 }
             }
 
-            // Restore the masks
+            // Restore masks.
             rowMask = (int[])clonedRowMask.Clone();
             colMask = (int[])clonedColMask.Clone();
             boxMask = (int[])clonedBoxMask.Clone();
         }
 
-        // Helper method to extract value from options bitmask
+        /// <summary>
+        /// Extracts a determined value from the options bitmask.
+        /// </summary>
         private int GetValueFromOptions(int options)
         {
+            // Return value only if cell is solved.
             if (CountBits(options) != 1)
                 return 0;
 
@@ -287,9 +317,12 @@ namespace HoffSudoku.Solvers
             return value;
         }
 
-        // It will use the CPU itself to quickly calculate the number of bits.
+        /// <summary>
+        /// Counts the number of set bits in the integer.
+        /// </summary>
         private int CountBits(int n)
         {
+            // Use CPU's popcount for speed.
             return BitOperations.PopCount((uint)n);
         }
     }
