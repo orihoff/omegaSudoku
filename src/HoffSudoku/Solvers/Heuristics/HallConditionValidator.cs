@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using HoffSudoku.Models;
+using HoffSudoku.Helpers;
 
 namespace HoffSudoku.Solvers
 {
@@ -27,13 +28,13 @@ namespace HoffSudoku.Solvers
                 for (int c = 0; c < n; c++)
                 {
                     int options = board.GetOptions(r, c);
-                    if (CountBits(options) == 1)
+                    if (SudokuHelper.CountBits(options) == 1)
                     {
                         fixedMask |= options;
                     }
                     else
                     {
-                        int cand = options & ~(rowMask[r] | colMask[c] | boxMask[GetBoxIndex(r, c)]);
+                        int cand = options & ~(rowMask[r] | colMask[c] | boxMask[SudokuHelper.GetBoxIndex(r, c)]);
                         if (cand == 0)
                             return false; // No candidates -> contradiction.
                         cellCandidates.Add(cand);
@@ -52,13 +53,13 @@ namespace HoffSudoku.Solvers
                 for (int r = 0; r < n; r++)
                 {
                     int options = board.GetOptions(r, c);
-                    if (CountBits(options) == 1)
+                    if (SudokuHelper.CountBits(options) == 1)
                     {
                         fixedMask |= options;
                     }
                     else
                     {
-                        int cand = options & ~(rowMask[r] | colMask[c] | boxMask[GetBoxIndex(r, c)]);
+                        int cand = options & ~(rowMask[r] | colMask[c] | boxMask[SudokuHelper.GetBoxIndex(r, c)]);
                         if (cand == 0)
                             return false;
                         cellCandidates.Add(cand);
@@ -83,13 +84,13 @@ namespace HoffSudoku.Solvers
                         for (int c = bc; c < bc + subCols; c++)
                         {
                             int options = board.GetOptions(r, c);
-                            if (CountBits(options) == 1)
+                            if (SudokuHelper.CountBits(options) == 1)
                             {
                                 fixedMask |= options;
                             }
                             else
                             {
-                                int cand = options & ~(rowMask[r] | colMask[c] | boxMask[GetBoxIndex(r, c)]);
+                                int cand = options & ~(rowMask[r] | colMask[c] | boxMask[SudokuHelper.GetBoxIndex(r, c)]);
                                 if (cand == 0)
                                     return false;
                                 cellCandidates.Add(cand);
@@ -115,7 +116,7 @@ namespace HoffSudoku.Solvers
             // Check every subset of missing digits.
             for (int s = missing; s > 0; s = (s - 1) & missing)
             {
-                int requiredCount = CountBits(s); // Number of digits in the subset.
+                int requiredCount = SudokuHelper.CountBits(s); // Number of digits in the subset.
                 int availableCells = 0;
                 foreach (int cand in cellCandidates)
                 {
@@ -126,22 +127,6 @@ namespace HoffSudoku.Solvers
                     return false; // Not enough cells for these digits.
             }
             return true;
-        }
-
-        private static int GetBoxIndex(int row, int col)
-        {
-            // Calculate subgrid index using division.
-            return (row / SudokuConstants.SubgridRows) * SudokuConstants.SubgridCols
-                   + (col / SudokuConstants.SubgridCols);
-        }
-
-        /// <summary>
-        /// Counts the number of set bits in the integer.
-        /// </summary>
-        private static int CountBits(int n)
-        {
-            // Use CPU's popcount for speed.
-            return BitOperations.PopCount((uint)n);
         }
     }
 }

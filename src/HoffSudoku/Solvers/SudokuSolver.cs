@@ -6,11 +6,12 @@ using System.Numerics;
 using HoffSudoku.Models;
 using HoffSudoku.Exceptions;
 using HoffSudoku.Solvers.Heuristics;
+using HoffSudoku.Helpers; // שימוש בפונקציות המשותפות
 
 namespace HoffSudoku.Solvers
 {
     /// <summary>
-    /// A Sudoku solver that uses heroics and backtracking.
+    /// A Sudoku solver that uses heuristics and backtracking.
     /// </summary>
     public class SudokuSolver
     {
@@ -73,25 +74,15 @@ namespace HoffSudoku.Solvers
                 {
                     int options = board.GetOptions(r, c);
                     // Check if the cell has a determined value.
-                    if (CountBits(options) == 1)
+                    if (SudokuHelper.CountBits(options) == 1)
                     {
                         // Calculate the value's bit index.
-                        int val = (int)(Math.Log(options, 2) + 1) + SudokuConstants.MinValue - 1;
+                        int val = (int)(Math.Log(options, 2) + 1) + minVal - 1;
                         int bitIndex = (val - minVal) / step;
-                        SetBit(r, c, bitIndex); // Update masks for the cell.
+                        SudokuHelper.SetBit(r, c, bitIndex, rowMask, colMask, boxMask, SudokuHelper.GetBoxIndex(r, c));
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Gets the index of the subgrid based on the cell's row and column.
-        /// </summary>
-        private int GetBoxIndex(int row, int col)
-        {
-            // Calculate subgrid index using division.
-            return (row / SudokuConstants.SubgridRows) * SudokuConstants.SubgridCols
-                   + (col / SudokuConstants.SubgridCols);
         }
 
         /// <summary>
@@ -99,9 +90,7 @@ namespace HoffSudoku.Solvers
         /// </summary>
         private void SetBit(int row, int col, int bitIndex)
         {
-            rowMask[row] |= (1 << bitIndex); // Mark the number as used in this row.
-            colMask[col] |= (1 << bitIndex);   // Mark the number as used in this column.
-            boxMask[GetBoxIndex(row, col)] |= (1 << bitIndex); // Mark the number in the subgrid.
+            SudokuHelper.SetBit(row, col, bitIndex, rowMask, colMask, boxMask, SudokuHelper.GetBoxIndex(row, col));
         }
 
         /// <summary>
@@ -109,9 +98,10 @@ namespace HoffSudoku.Solvers
         /// </summary>
         private void ClearBit(int row, int col, int bitIndex)
         {
-            rowMask[row] &= ~(1 << bitIndex); // Remove the number from the row mask.
-            colMask[col] &= ~(1 << bitIndex);   // Remove the number from the column mask.
-            boxMask[GetBoxIndex(row, col)] &= ~(1 << bitIndex); // Remove the number from the box mask.
+            // Since the helper does not provide a ClearBit, נממש כאן את הפעולה.
+            rowMask[row] &= ~(1 << bitIndex);
+            colMask[col] &= ~(1 << bitIndex);
+            boxMask[SudokuHelper.GetBoxIndex(row, col)] &= ~(1 << bitIndex);
         }
 
         /// <summary>
@@ -137,10 +127,10 @@ namespace HoffSudoku.Solvers
         {
             bool changed = false;
 
-            // apply Naked Singles herostic.
+            // Apply Naked Singles heuristic.
             changed |= NakedSingles.ApplyNakedSingles(board, rowMask, colMask, boxMask);
 
-            // Only for larger boards try Hidden Singles.
+            // For larger boards, try Hidden Singles.
             if (SudokuConstants.BoardSize > 9)
             {
                 changed |= HiddenSingles.ApplyHiddenSingles(board, rowMask, colMask, boxMask);
@@ -171,11 +161,11 @@ namespace HoffSudoku.Solvers
                 for (int c = 0; c < n; c++)
                 {
                     int options = board.GetOptions(r, c);
-                    if (CountBits(options) == 1)
+                    if (SudokuHelper.CountBits(options) == 1)
                         continue; // Skip solved cells.
 
-                    int validCandidates = options & ~(rowMask[r] | colMask[c] | boxMask[GetBoxIndex(r, c)]);
-                    int validCount = CountBits(validCandidates);
+                    int validCandidates = options & ~(rowMask[r] | colMask[c] | boxMask[SudokuHelper.GetBoxIndex(r, c)]);
+                    int validCount = SudokuHelper.CountBits(validCandidates);
 
                     if (validCount == 0)
                         return false; // Dead end: no candidates.
@@ -206,7 +196,7 @@ namespace HoffSudoku.Solvers
                 return true;
 
             int cellOptions = board.GetOptions(chosenRow, chosenCol);
-            int boxIndexChosen = GetBoxIndex(chosenRow, chosenCol);
+            int boxIndexChosen = SudokuHelper.GetBoxIndex(chosenRow, chosenCol);
 
             // Try each candidate for the chosen cell.
             for (int i = 0; i < SudokuConstants.BoardSize; i++)
@@ -251,14 +241,14 @@ namespace HoffSudoku.Solvers
             // Count unsolved cells in the same row.
             for (int c = 0; c < n; c++)
             {
-                if (c != col && CountBits(board.GetOptions(row, c)) > 1)
+                if (c != col && SudokuHelper.CountBits(board.GetOptions(row, c)) > 1)
                     degree++;
             }
 
             // Count unsolved cells in the same column.
             for (int r = 0; r < n; r++)
             {
-                if (r != row && CountBits(board.GetOptions(r, col)) > 1)
+                if (r != row && SudokuHelper.CountBits(board.GetOptions(r, col)) > 1)
                     degree++;
             }
 
@@ -274,7 +264,7 @@ namespace HoffSudoku.Solvers
                 {
                     for (int cc = startCol; cc < startCol + subC; cc++)
                     {
-                        if ((rr != row || cc != col) && CountBits(board.GetOptions(rr, cc)) > 1)
+                        if ((rr != row || cc != col) && SudokuHelper.CountBits(board.GetOptions(rr, cc)) > 1)
                             degree++;
                     }
                 }
@@ -310,20 +300,11 @@ namespace HoffSudoku.Solvers
         private int GetValueFromOptions(int options)
         {
             // Return value only if cell is solved.
-            if (CountBits(options) != 1)
+            if (SudokuHelper.CountBits(options) != 1)
                 return 0;
 
             int value = (int)(Math.Log(options, 2) + 1) + SudokuConstants.MinValue - 1;
             return value;
-        }
-
-        /// <summary>
-        /// Counts the number of set bits in the integer.
-        /// </summary>
-        private int CountBits(int n)
-        {
-            // Use CPU's popcount for speed.
-            return BitOperations.PopCount((uint)n);
         }
     }
 }
