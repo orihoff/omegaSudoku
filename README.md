@@ -1,6 +1,6 @@
 # HoffSudoku Solver
 
-Hey, welcome to HoffSudoku, a generic, high-performance Sudoku solver built in C#. Whether you’re tackling classic 9×9 puzzles or pushing your limits with up to 25×25 boards, this project is engineered to deliver fast and efficient results.
+Hey, welcome to HoffSudoku, a generic, high-performance Sudoku solver built in C#. Whether you’re intrest in classic 9×9 puzzles or pushing your limits with up to 25×25 boards, this project is engineered to deliver fast and efficient results.
 
 ## Sudoku Rules
 
