@@ -252,5 +252,26 @@ namespace HoffSudoku.Tests.SolvingAlgorithm
             // Assert
             Assert.AreEqual(expectedBoardString, board.ToString());
         }
+
+        /* super Easy board 13. 1x1 */
+        [TestMethod]
+        public void EasyBoard13Test()
+        {
+            // Arrange
+            string boardString = "0";
+            string expectedBoardString = "1";
+
+            SudokuConstants.SetBoardSize((int)Math.Sqrt(boardString.Length));
+            SudokuBoard board = new SudokuBoard();
+            board.Initialize(boardString);
+            SudokuSolver solver = new SudokuSolver(board);
+
+            // Act
+            solver.Solve();
+
+            // Assert
+            Assert.AreEqual(expectedBoardString, board.ToString());
+        }
+
     }
 }
