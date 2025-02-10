@@ -30,9 +30,9 @@ namespace HoffSudoku.Helpers
         /// </summary>
         public static void SetBit(int row, int col, int bitIndex, int[] rowMask, int[] colMask, int[] boxMask, int boxIndex)
         {
-            rowMask[row] |= (1 << bitIndex);
-            colMask[col] |= (1 << bitIndex);
-            boxMask[boxIndex] |= (1 << bitIndex);
+            rowMask[row] |= (1 << bitIndex); // Turns on the bit at bitIndex to mark the number as present in the row.
+            colMask[col] |= (1 << bitIndex);// same for colum
+            boxMask[boxIndex] |= (1 << bitIndex);// same for box
         }
     }
 }
