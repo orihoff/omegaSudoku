@@ -20,6 +20,7 @@ namespace HoffSudoku.Handlers
             Console.CancelKeyPress += (sender, e) =>
             {
                 Console.WriteLine("\nCtrl+C detected. Almost got me, but not this time...");
+                PrintExitMessage();
                 e.Cancel = true; // Prevents immediate program exit
                 Environment.Exit(0);
             };
@@ -46,7 +47,10 @@ namespace HoffSudoku.Handlers
                     string? choice = Console.ReadLine()?.Trim().ToLower(); // Read user input
 
                     if (choice == "exit") // Exit condition
+                    {
+                        PrintExitMessage();
                         break;
+                    }
 
                     if (choice != "1" && choice != "2") // Invalid input handling
                     {
@@ -233,7 +237,7 @@ namespace HoffSudoku.Handlers
         /// </summary>
         private void PrintMenuOptions()
         {
-            Console.WriteLine("\n Please choose an option:");
+            Console.WriteLine("\nPlease choose an option:");
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("  1) Enter a puzzle manually");
             Console.WriteLine("  2) Load a puzzle from file");
@@ -249,7 +253,7 @@ namespace HoffSudoku.Handlers
         private void PrintSectionHeader(string title)
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("\n=== {0} ===", title);
+            Console.WriteLine($"\n=== {title} ===");
             Console.ResetColor();
         }
 
@@ -270,6 +274,16 @@ namespace HoffSudoku.Handlers
         {
             Console.WriteLine("\nPress Enter to continue...");
             Console.ReadLine();
+        }
+
+        /// <summary>
+        /// Prints the exit message "Goodbye" when exiting the application.
+        /// </summary>
+        private static void PrintExitMessage()
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("\nGoodbye");
+            Console.ResetColor();
         }
     }
 }

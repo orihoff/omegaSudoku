@@ -9,7 +9,14 @@ namespace HoffSudoku.Solvers.Heuristics
 {
     /// <summary>
     /// Applies the Hidden Singles strategy to the Sudoku board.
+    /// Hidden Singles is a solving technique that identifies cases where a digit 
+    /// must go into a specific cell because no other cell in the row, column, 
+    /// or box can take it. 
+    /// This strategy works by scanning each row, column, and subgrid to find numbers 
+    /// that appear as a possibility in only one cell. 
+    /// If a number has only one valid position in a unit, it must be placed there. 
     /// </summary>
+
     public static class HiddenSingles
     {
         /// <summary>

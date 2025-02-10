@@ -40,10 +40,4 @@ namespace HoffSudoku.Exceptions
         public RuntimeException(string message) : base(message) { }
     }
 
-    // Indicates that the operation was interrupted unexpectedly.
-    // Examples: system interrupts like Ctrl+C.
-    public class OperationInterruptedException : SudokuException
-    {
-        public OperationInterruptedException(string message) : base(message) { }
-    }
 }

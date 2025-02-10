@@ -9,8 +9,17 @@ namespace HoffSudoku.Solvers.Heuristics
 {
     /// <summary>
     /// Identifies and applies the Naked Singles technique.
-    /// If a cell has only one possible candidate, it is set as the final value.
+    /// Naked Singles is a Sudoku solving strategy that finds cells with only one 
+    /// possible candidate and immediately sets that value. 
+    /// This happens when all other numbers in a cell’s row, column, and box 
+    /// have been eliminated, leaving a single valid possibility. 
+    /// you can say that 
+    ///  Naked Singles is quitק similar to Hidden Singles, but while 
+    /// Hidden Singles occur when a number has only one valid placement in a unit 
+    /// (row, column, or box), Naked Singles occur when a cell itself has only 
+    /// one possible candidate remaining.
     /// </summary>
+
     public static class NakedSingles
     {
         public static bool ApplyNakedSingles(SudokuBoard board, int[] rowMask, int[] colMask, int[] boxMask)

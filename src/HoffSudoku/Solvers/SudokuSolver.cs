@@ -128,7 +128,7 @@ namespace HoffSudoku.Solvers
             bool changed = false;
 
             // Apply Naked Singles heuristic.
-            changed |= NakedSingles.ApplyNakedSingles(board, rowMask, colMask, boxMask);
+            changed |= NakedSingles.ApplyNakedSingles(board, rowMask, colMask, boxMask);// use |= instead of = in order to not overide change = true
 
             // For larger boards, try Hidden Singles.
             if (SudokuConstants.BoardSize > 9)
@@ -252,7 +252,7 @@ namespace HoffSudoku.Solvers
                     degree++;
             }
 
-            // For 25x25 boards, also check the subgrid.
+            // For 25x25 boards, also check the subgrid(only for bigger boards its worthwhile).
             if (n == 25)
             {
                 int subR = SudokuConstants.SubgridRows;

@@ -2,6 +2,14 @@
 using HoffSudoku.Models;
 using HoffSudoku.Solvers;
 using System;
+// Note: There is always the option to validate the solution dynamically 
+// using SudokuValidator.ValidateInitialBoard(board) instead of explicitly 
+// specifying the expected output. However, I have decided to keep the current 
+// approach of comparing the solved board to a predefined expected result. 
+// This maintains consistency with previous projects like the calculator(when we inserted the expected result) and ensures a direct 
+// verification of the solver's correctness. Additionally, using dynamic validation 
+// does not verify whether the originally fixed cells in the board remain unchanged, 
+// which is an important aspect of ensuring the solver preserves the given constraints.
 
 namespace HoffSudoku.Tests.SolvingAlgorithm
 {

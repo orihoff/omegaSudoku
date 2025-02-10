@@ -6,9 +6,16 @@ using HoffSudoku.Helpers;
 
 namespace HoffSudoku.Solvers
 {
-    /// <summary>
+    /// /// <summary>
     /// Validates the Hall condition for a 9x9 board.
+    /// Hall's Condition is a mathematical rule that ensures a set of numbers 
+    /// can fit into a limited number of available spots. 
+    /// In Sudoku, this means that if a group of missing numbers in a row, column, 
+    /// or box has fewer available cells than numbers, then the puzzle is unsolvable. 
+    /// This condition helps to detect impossible situations early, 
+    /// preventing wasted effort in solving an unsolvable puzzle.
     /// </summary>
+
     public class HallConditionValidator
     {
         public static bool ValidateHallCondition(SudokuBoard board, int[] rowMask, int[] colMask, int[] boxMask)
