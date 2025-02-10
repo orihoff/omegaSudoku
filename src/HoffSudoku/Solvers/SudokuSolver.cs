@@ -6,7 +6,7 @@ using System.Numerics;
 using HoffSudoku.Models;
 using HoffSudoku.Exceptions;
 using HoffSudoku.Solvers.Heuristics;
-using HoffSudoku.Helpers; // שימוש בפונקציות המשותפות
+using HoffSudoku.Helpers; 
 
 namespace HoffSudoku.Solvers
 {

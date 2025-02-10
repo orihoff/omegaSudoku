@@ -2,7 +2,7 @@
 using System.Text;
 using HoffSudoku.Validators;
 using HoffSudoku.Exceptions;
-using HoffSudoku.Helpers;  // שימוש בפונקציות המשותפות
+using HoffSudoku.Helpers;
 
 namespace HoffSudoku.Models
 {
