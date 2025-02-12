@@ -11,10 +11,12 @@ namespace HoffSudoku.Handlers
         private SudokuBoard? board;
         private string? originalFilePath;
         private readonly FileHandler fileHandler;
+        private readonly ConsoleView consoleView;
 
         public CLIHandler()
         {
             fileHandler = new FileHandler();
+            consoleView = new ConsoleView();
 
             // Handle Ctrl+C (CancelKeyPress) to prevent accidental termination
             Console.CancelKeyPress += (sender, e) =>
@@ -42,119 +44,28 @@ namespace HoffSudoku.Handlers
             {
                 try
                 {
-                    PrintMenuOptions(); // Show the menu options
-
-                    string? choice = Console.ReadLine()?.Trim().ToLower(); // Read user input
-
-                    if (choice == "exit") // Exit condition
+                    string? choice = GetUserChoice();
+                    if (choice == "exit")
                     {
                         PrintExitMessage();
                         break;
                     }
 
-                    if (choice != "1" && choice != "2") // Invalid input handling
+                    if (choice != "1" && choice != "2")
                     {
                         ShowErrorMessage("Invalid choice. Please enter '1', '2', or 'exit'.");
                         PauseBeforeContinuing();
                         continue;
                     }
 
-                    string? input = null;
-                    try
-                    {
-                        // Get the puzzle either from console input or a file
-                        input = choice switch
-                        {
-                            "1" => GetPuzzleFromConsole(),
-                            "2" => fileHandler.GetPuzzleFromFile(ref originalFilePath),
-                            _ => null
-                        };
-                    }
-                    catch (InvalidInputException ex)
-                    {
-                        ShowErrorMessage($"Invalid input: {ex.Message}");
-                        PauseBeforeContinuing();
-                        continue;
-                    }
-
+                    string? input = GetPuzzleInput(choice);
                     if (input == null) // If the user chooses to go back to the menu
                     {
                         PauseBeforeContinuing();
                         continue;
                     }
 
-                    try
-                    {
-                        // Verify if input length forms a perfect square (valid Sudoku grid)
-                        int inputLength = input.Replace("\n", "").Replace("\r", "").Length;
-                        double sqrt = Math.Sqrt(inputLength);
-                        if (sqrt % 1 != 0)
-                        {
-                            throw new InvalidInputException($"Input length {inputLength} is not a perfect square.");
-                        }
-                        int size = (int)sqrt;
-
-                        // Enforce maximum board size limit (25x25)
-                        if (size > 25)
-                        {
-                            throw new InvalidInputException($"The maximum allowed board size is 25x25. Your board is {size}x{size}.");
-                        }
-
-                        // Set board size dynamically
-                        SudokuConstants.SetBoardSize(size);
-
-                        // Initialize and display the board
-                        board = new SudokuBoard();
-                        board.Initialize(input);
-
-                        PrintSectionHeader("Initial Board");
-                        board.Print();
-
-                        // Validate if the board follows Sudoku rules
-                        SudokuValidator.ValidateInitialBoard(board);
-
-                        // Attempt to solve the Sudoku puzzle
-                        SudokuSolver solver = new SudokuSolver(board);
-                        bool success = solver.Solve();
-
-                        if (success)
-                        {
-                            PrintSectionHeader("Solved Board");
-                            board.Print();
-
-                            // Save solved puzzle to file if it was loaded from a file
-                            if (choice == "2")
-                            {
-                                string solvedBoard = board.ToString();
-                                fileHandler.SaveSolvedBoardToFile(solvedBoard, originalFilePath);
-                                Console.ForegroundColor = ConsoleColor.Green;
-                                Console.WriteLine("\nSolved board has been saved to file.");
-                                Console.ResetColor();
-                            }
-                        }
-                        else
-                        {
-                            throw new SolveFailureException("Sudoku puzzle is unsolvable.");
-                        }
-                    }
-                    catch (InvalidInputException ex)
-                    {
-                        ShowErrorMessage($"Invalid input: {ex.Message}");
-                    }
-                    catch (InvalidBoardException ex)
-                    {
-                        ShowErrorMessage(ex.Message);
-                    }
-                    catch (SolveFailureException ex)
-                    {
-                        ShowErrorMessage($"Solver error: {ex.Message}");
-                    }
-                    catch (Exception ex)
-                    {
-                        ShowErrorMessage($"Unexpected error: {ex.Message}");
-                    }
-
-                    PauseBeforeContinuing(); // Wait before restarting menu loop
+                    ProcessPuzzle(input, choice);
                 }
                 catch (OperationCanceledException)
                 {
@@ -166,6 +77,147 @@ namespace HoffSudoku.Handlers
                     ShowErrorMessage($"Unexpected error: {ex.Message}");
                     PauseBeforeContinuing();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Reads the user's menu choice.
+        /// </summary>
+        private string? GetUserChoice()
+        {
+            PrintMenuOptions();
+            return Console.ReadLine()?.Trim().ToLower();
+        }
+
+        /// <summary>
+        /// Gets a Sudoku puzzle input from the user via console or file.
+        /// </summary>
+        private string? GetPuzzleInput(string choice)
+        {
+            try
+            {
+                return choice switch
+                {
+                    "1" => GetPuzzleFromConsole(),
+                    "2" => fileHandler.GetPuzzleFromFile(ref originalFilePath),
+                    _ => null
+                };
+            }
+            catch (InvalidInputException ex)
+            {
+                ShowErrorMessage($"Invalid input: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Processes the puzzle input: validates, initializes, solves, and displays/saves the board.
+        /// </summary>
+        private void ProcessPuzzle(string input, string choice)
+        {
+            try
+            {
+                int boardSize = ValidateInputAndGetBoardSize(input);
+                SetupBoard(input, boardSize);
+                PrintInitialBoard();
+
+                // Validate if the board follows Sudoku rules
+                SudokuValidator.ValidateInitialBoard(board);
+
+                SolvePuzzle(choice);
+            }
+            catch (InvalidInputException ex)
+            {
+                ShowErrorMessage($"Invalid input: {ex.Message}");
+            }
+            catch (InvalidBoardException ex)
+            {
+                ShowErrorMessage(ex.Message);
+            }
+            catch (SolveFailureException ex)
+            {
+                ShowErrorMessage($"Solver error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                ShowErrorMessage($"Unexpected error: {ex.Message}");
+            }
+            finally
+            {
+                PauseBeforeContinuing(); // Wait before restarting menu loop
+            }
+        }
+
+        /// <summary>
+        /// Validates input and calculates the board size.
+        /// </summary>
+        private int ValidateInputAndGetBoardSize(string input)
+        {
+            // Verify if input length forms a perfect square (valid Sudoku grid)
+            int inputLength = input.Replace("\n", "").Replace("\r", "").Length;
+            double sqrt = Math.Sqrt(inputLength);
+            if (sqrt % 1 != 0)
+            {
+                throw new InvalidInputException($"Input length {inputLength} is not a perfect square.");
+            }
+            int size = (int)sqrt;
+
+            // Enforce maximum board size limit (25x25)
+            if (size > 25)
+            {
+                throw new InvalidInputException($"The maximum allowed board size is 25x25. Your board is {size}x{size}.");
+            }
+
+            // Set board size dynamically
+            SudokuConstants.SetBoardSize(size);
+            return size;
+        }
+
+        /// <summary>
+        /// Initializes the board with the provided input.
+        /// </summary>
+        private void SetupBoard(string input, int size)
+        {
+            board = new SudokuBoard();
+            board.Initialize(input);
+        }
+
+        /// <summary>
+        /// Prints the initial board.
+        /// </summary>
+        private void PrintInitialBoard()
+        {
+            PrintSectionHeader("Initial Board");
+            board.Print();
+        }
+
+        /// <summary>
+        /// Attempts to solve the puzzle and displays the solved board.
+        /// </summary>
+        private void SolvePuzzle(string choice)
+        {
+            // Attempt to solve the Sudoku puzzle
+            SudokuSolver solver = new SudokuSolver(board);
+            bool success = solver.Solve();
+
+            if (success)
+            {
+                PrintSectionHeader("Solved Board");
+                board.Print();
+
+                // Save solved puzzle to file if it was loaded from a file
+                if (choice == "2")
+                {
+                    string solvedBoard = board.ToString();
+                    fileHandler.SaveSolvedBoardToFile(solvedBoard, originalFilePath);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("\nSolved board has been saved to file.");
+                    Console.ResetColor();
+                }
+            }
+            else
+            {
+                throw new SolveFailureException("Sudoku puzzle is unsolvable.");
             }
         }
 
@@ -208,16 +260,7 @@ namespace HoffSudoku.Handlers
         /// </summary>
         private void PrintBanner()
         {
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("               _       _                       _                ");
-            Console.WriteLine("  ___  ___   __| |_   _| | ___   _    ___  ___ | |_   _____ _ __ ");
-            Console.WriteLine(" / __|/ _ \\ / _` | | | | |/ / | | |  / __|/ _ \\| \\ \\ / / _ \\ '__|");
-            Console.WriteLine(" \\__ \\ (_) | (_| | |_| |   <| |_| |  \\__ \\ (_) | |\\ V /  __/ |   ");
-            Console.WriteLine(" |___/\\___/ \\__,_|\\__,_|_|\\_\\\\__,_|  |___/\\___/|_| \\_/ \\___|_|   ");
-            Console.WriteLine("                                                                 ");
-            Console.WriteLine("                  By Ori Hoffnung                    ");
-            Console.ResetColor();
-            Console.WriteLine("----------------------------------------------------------------");
+            consoleView.PrintBanner();
         }
 
         /// <summary>
@@ -225,11 +268,7 @@ namespace HoffSudoku.Handlers
         /// </summary>
         private void PrintWelcomeMessage()
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\nWelcome to the Sudoku Solver!");
-            Console.WriteLine("You can enter a puzzle manually or load one from a file.");
-            Console.ResetColor();
-            Console.WriteLine("\n----------------------------------------------------------------");
+            consoleView.PrintWelcomeMessage();
         }
 
         /// <summary>
@@ -237,14 +276,7 @@ namespace HoffSudoku.Handlers
         /// </summary>
         private void PrintMenuOptions()
         {
-            Console.WriteLine("\nPlease choose an option:");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("  1) Enter a puzzle manually");
-            Console.WriteLine("  2) Load a puzzle from file");
-            Console.ResetColor();
-            Console.WriteLine("  Type 'exit' to quit");
-            Console.WriteLine("----------------------------------------------------------------");
-            Console.Write("Your choice: ");
+            consoleView.PrintMenuOptions();
         }
 
         /// <summary>
@@ -252,9 +284,7 @@ namespace HoffSudoku.Handlers
         /// </summary>
         private void PrintSectionHeader(string title)
         {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine($"\n=== {title} ===");
-            Console.ResetColor();
+            consoleView.PrintSectionHeader(title);
         }
 
         /// <summary>
@@ -262,9 +292,7 @@ namespace HoffSudoku.Handlers
         /// </summary>
         private void ShowErrorMessage(string message)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(message);
-            Console.ResetColor();
+            consoleView.ShowErrorMessage(message);
         }
 
         /// <summary>
@@ -272,8 +300,7 @@ namespace HoffSudoku.Handlers
         /// </summary>
         private void PauseBeforeContinuing()
         {
-            Console.WriteLine("\nPress Enter to continue...");
-            Console.ReadLine();
+            consoleView.PauseBeforeContinuing();
         }
 
         /// <summary>

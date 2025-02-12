@@ -13,7 +13,7 @@ namespace HoffSudoku
             }
             catch (Exception ex)
             {
-                // Handle any unhandled exceptions even they dont exist
+                // Handle any unhandled exceptions even they dont exist :)
                 Console.WriteLine($"An unexpected error occurred: {ex.Message}");
             }
         }
